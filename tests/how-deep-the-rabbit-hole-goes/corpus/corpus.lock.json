@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "corpus_id": "instinct-behavior-corpus-v1",
+  "frozen": "2026-11-14",
+  "files": [
+    {
+      "path": "development.jsonl",
+      "sha256": "b6fbc33e77a5fe11b61466867961f38b742fc9637d67ea6c4036321a53340c2d",
+      "bytes": 206802
+    },
+    {
+      "path": "holdout.jsonl",
+      "sha256": "3dbaccb77026f4d60cd760ac2c55bd746102719b8dc442398e84ecf83651d933",
+      "bytes": 88489
+    },
+    {
+      "path": "families.json",
+      "sha256": "65e79ddc2f2d9f314990bc6fced17ab449725ef79345978e3a584e4082a657d7",
+      "bytes": 29745
+    },
+    {
+      "path": "provenance.json",
+      "sha256": "d81eaf5c2af651bda547336180e95b05c19a228e3080ed72ecefbd9bc48b0c56",
+      "bytes": 1980
+    },
+    {
+      "path": "manifest.json",
+      "sha256": "d6082aab4e6fd752392a8f828318fa68464ad9fc19a194b7474db14ba6ea9e00",
+      "bytes": 2058
+    }
+  ],
+  "note": "Checksum lock detects accidental edits; authenticity is anchored by the external step-2 checkpoint. Do not regenerate this lock after viewing scores."
+}

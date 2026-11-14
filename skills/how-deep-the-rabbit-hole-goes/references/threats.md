@@ -1,315 +1,373 @@
-# Каталог загроз для скілів і плагінів агентів (T01–T26)
+# Threat catalog for agent skills and plugins (T01–T26)
 
-Рівні: **CRITICAL** — скіл не можна використовувати, доки знахідку не прибрано · **HIGH** — небезпечно,
-якщо це не пояснює призначення скіла · **MEDIUM** — потрібне рішення людини · **LOW/INFO** — до відома.
+Severities: **CRITICAL** — the skill must not be used until the finding is removed · **HIGH** — dangerous
+unless the skill's purpose explains it · **MEDIUM** — needs a human decision · **LOW/INFO** — for awareness.
 
-Загроза може бути не лише в `SKILL.md`, а й у `references/`, `scripts/`, `assets/`, прикладах коду,
-коментарях, назвах файлів, метаданих зображень і в `description` (його агент читає завжди, навіть коли
-скіл не викликано). У плагіні — ще й у хуках, конфігурації MCP/LSP, `agents/`, `commands/`, `bin/`.
+A threat can sit not only in `SKILL.md` but also in `references/`, `scripts/`, `assets/`, code examples,
+comments, file names, image metadata and the `description` (the agent always reads it, even when the
+skill is not invoked). In a plugin, also in hooks, MCP/LSP configuration, `agents/`, `commands/`, `bin/`.
 
-**Два типи атакерів.** «Крадії даних» тягнуть секрети кодом у скриптах і залежностях (T05–T07, T11);
-«викрадачі агента» діють самим текстом інструкцій (T01–T03, T20, T22–T24). Перших ловить сканер,
-других — здебільшого лише уважне читання.
+**Two kinds of attacker.** "Data thieves" pull secrets with code in scripts and dependencies (T05–T07,
+T11); "agent hijackers" act through the text of the instructions themselves (T01–T03, T20, T22–T24). The
+scanner catches the first kind; the second is mostly caught only by careful reading.
 
-**Контекст заборони.** Для правил про секрети (T06), конфігурацію (T09), пам'ять (T23) і «silently» (T03)
-сканер знижує рівень на один, якщо в рядку поза самим збігом є заперечення («never», «не», «заборонено»)
-або розділ має заголовок-заборону рівня `##` і нижче: «не переносити секрети з `.env`» — це правило
-безпеки. Псевдозаперечення («do not forget to…», «without asking», «не забудь») забороною не вважаються.
-Атакер теж може дописати «не», тому такі знахідки однаково перевіряй.
+**Prohibition context.** Selected T03/T06/T09/T23 rules lower severity by one only for an explicit,
+nearby prohibition in Markdown prose. Code, fenced code, metadata, unrelated clauses and trailing
+"never mind" cannot suppress a finding. Ukrainian object-before-prohibition forms are supported.
+A prohibiting heading only affects a restricted noun-only list, never an imperative. Pseudo-negations
+("do not forget to…", "without asking", "не забудь") do not count. This remains a heuristic: review
+every lowered finding rather than accepting it as proof of safety.
 
-**Що сканер розплутує сам:** рядки з продовженням (`\`, `|`), гомогліфи й fullwidth-символи (повторний
-прогін правил після нормалізації), base64-блоки (правила проганяються по розкодованому тексту), текст у
-метаданих і «хвостах» зображень. Знахідка з позначкою «після нормалізації» або «у розкодованому base64»
-отримує рівень на один вищий: легітимному скілу ховати команду нема навіщо.
+**What the scanner untangles by itself:** continued lines (`\`, `|`), homoglyphs and fullwidth characters
+(a second pass of the rules after normalization), base64 blocks (the rules run over the decoded text), text
+in image metadata and trailers. A finding marked "after normalization" or "in decoded base64" gets one
+severity level higher: a legitimate skill has no reason to hide a command.
+
+**Languages.** The text rules cover English and Ukrainian. Instructions in other languages (and code in
+languages other than Python, JavaScript/TypeScript, PowerShell and shell) are mostly invisible to the
+scanner and must be read by hand.
 
 ---
 
-## Зміст
+## Contents
 
-| Інструкції та обман | Код і дані | Система й оточення | Екосистема |
+| Instructions and deception | Code and data | System and environment | Ecosystem |
 |---|---|---|---|
-| T01 Prompt injection | T05 Віддалене виконання | T08 Руйнівні операції | T11 Ланцюг постачання |
-| T02 Приховані інструкції | T06 Секрети | T09 Закріплення | T12 Перехоплення тригерів |
-| T03 Обман користувача | T07 Ексфільтрація | T17 Вихід за межі папки | T13 Надмірні привілеї |
-| T16 Соціальна інженерія | T10 Обфускація | T18 Ресурси | T19 Непрозорі файли |
-| T20 Мета-ін'єкція | T14 Зовнішні дії | T21 Автозапуск | T23 Пам'ять і самопоширення |
-| T22 Умовна поведінка | T15 Персональні дані | T25 Розвідка | T24 Перехоплення каналів |
-| T26 Шкідливий результат | | | |
+| T01 Prompt injection | T05 Remote execution | T08 Destructive operations | T11 Supply chain |
+| T02 Hidden instructions | T06 Secrets | T09 Persistence | T12 Trigger hijacking |
+| T03 Deceiving the user | T07 Exfiltration | T17 Leaving the folder | T13 Excessive privileges |
+| T16 Social engineering | T10 Obfuscation | T18 Resources | T19 Opaque files |
+| T20 Meta-injection | T14 External actions | T21 Auto-run | T23 Memory and self-propagation |
+| T22 Conditional behavior | T15 Personal data | T25 Reconnaissance | T24 Channel hijacking |
+| T26 Malicious output | | | |
 
 ---
 
-## T01. Prompt injection: перехоплення інструкцій — CRITICAL
-Скіл намагається переписати правила агента: скасувати системні інструкції, змінити роль агента,
-послатися на нібито дозвіл від Anthropic, системи чи адміністратора.
-- **Ознаки:** «ignore previous instructions», «you are now…», «new system prompt», «Anthropic authorized»,
-  «проігноруй попередні інструкції», «your real task is…», «DAN mode», «do not follow the user».
-- **Підроблені маркери ролей (HIGH):** `<system>`, `<system-reminder>`, `[SYSTEM]`, `[INST]`,
-  `<|im_start|>` — текст, оформлений так, ніби його написала система, а не автор скіла.
-- **Претензія на пріоритет (MEDIUM):** «це правило має пріоритет над…», «overrides any other instructions».
-- **Хибні тривоги:** документація, яка цитує такі фрази як приклад атаки (як цей файл).
-- **Непряма ін'єкція (LOW, на рівні скіла):** скіл читає зовнішній вміст (вебпошук, сторінки, листи,
-  issue, джерела новин), але ніде не каже агенту, що цей вміст — дані, а не інструкції. Сам скіл чистий,
-  але шкідлива сторінка може «підказати» агенту свої команди. Виправлення — один рядок у правилах.
+## T01. Prompt injection: hijacking instructions — CRITICAL
+The skill tries to rewrite the agent's rules: cancel system instructions, change the agent's role, cite
+alleged permission from Anthropic, the system or an administrator.
+- **Signs:** "ignore previous instructions", "you are now…", "new system prompt", "Anthropic authorized",
+  «проігноруй попередні інструкції», "your real task is…", "DAN mode", "do not follow the user".
+- **Fake role markers (HIGH):** `<system>`, `<system-reminder>`, `[SYSTEM]`, `[INST]`,
+  `<|im_start|>` — text formatted as if the system wrote it rather than the skill author.
+- **Claim of priority (MEDIUM):** "this rule takes precedence over…", "overrides any other instructions".
+- **False positives:** documentation that quotes such phrases as examples of attacks (like this file).
+- **Indirect injection (LOW, skill level):** the skill reads external content (web search, pages, email,
+  issues, news sources) but never tells the agent that this content is data, not instructions. The skill
+  itself is clean, but a malicious page can "suggest" its own commands to the agent. The fix is one line in
+  the rules.
 
-## T02. Приховані інструкції — CRITICAL (невидимі символи) / HIGH–MEDIUM (решта)
-Текст, який людина не бачить, а модель читає.
-- **Невидимі символи (CRITICAL):** zero-width (U+200B–U+200F, U+2060–U+2064), bidi-override
-  (U+202A–U+202E, U+2066–U+2069, «Trojan Source»), Unicode tag-символи (U+E0000–U+E007F) і додаткові
-  variation selectors (U+E0100–U+E01EF) — ними можна записати цілий невидимий текст.
-- **HIGH:** soft hyphen і заповнювачі (U+00AD, U+115F, U+3164…); керівні символи терміналу (ESC/ANSI,
-  backspace, одинокий CR) — у терміналі ховають або переписують уже показаний рядок.
-- **MEDIUM:** HTML-коментарі `<!-- … -->` і markdown-коментарі `[//]: #`; прихований HTML/CSS
-  (`display:none`, `font-size:0`, білий текст, атрибут `hidden`); гомогліфи (кирилична «а» в латинському
-  слові); текст після сотні пробілів або кількох десятків порожніх рядків; посилання, де показано один
-  домен, а веде воно на інший; `data:`-URI з HTML чи скриптом.
-- **Зображення:** текст у метаданих (EXIF, PNG tEXt) і дані після кінця файлу сканер бачить. Текст,
-  **намальований на картинці**, не бачить, а мультимодальна модель прочитає його як інструкцію —
-  зображення треба переглянути очима.
-- **Хибні тривоги:** U+200D у складених емодзі (сканер їх пропускає); змішані слова в багатомовних текстах.
+## T02. Hidden instructions — CRITICAL (invisible characters) / HIGH–MEDIUM (the rest)
+Text a human does not see but the model reads.
+- **Invisible characters (CRITICAL):** zero-width (U+200B–U+200F, U+2060–U+2064), bidi overrides
+  (U+202A–U+202E, U+2066–U+2069, "Trojan Source"), Unicode tag characters (U+E0000–U+E007F) and
+  supplementary variation selectors (U+E0100–U+E01EF) — an entire invisible text can be written with them.
+- **HIGH:** soft hyphen and fillers (U+00AD, U+115F, U+3164…); terminal control characters (ESC/ANSI,
+  backspace, a lone CR) — in a terminal they hide or overwrite a line that was already shown.
+- **MEDIUM:** HTML comments `<!-- … -->` and markdown comments `[//]: #`; hidden HTML/CSS
+  (`display:none`, `font-size:0`, white text, the `hidden` attribute); homoglyphs (a Cyrillic "а" in a
+  Latin word); text after a hundred spaces or a few dozen blank lines; links that show one domain but lead
+  to another; `data:` URIs with HTML or a script.
+- **Images:** the scanner sees text in metadata (EXIF, PNG tEXt) and data after the end of the file. It
+  does not see text **drawn into the picture**, yet a multimodal model will read it as an instruction —
+  images must be looked at.
+- **False positives:** U+200D in composite emoji (the scanner skips them); mixed-script words in
+  multilingual text.
 
-## T03. Приховування дій і обман користувача — CRITICAL
-Скіл велить агенту не казати користувачу, що він робить, підробляти звіт, глушити вивід.
-- **Ознаки:** «don't tell the user», «не повідомляй користувачу», «hide … from the summary»,
-  «report success regardless», «silently», «без підтвердження».
-- **Замітання слідів (HIGH):** `history -c`, `Clear-History`, `unset HISTFILE`, `wevtutil cl`, видалення
-  історії оболонки чи транскриптів.
-- **Прихований запуск (MEDIUM):** `-WindowStyle Hidden`, `nohup`, `disown`, `pythonw`, `start /b`.
+## T03. Hiding actions and deceiving the user — CRITICAL
+The skill tells the agent not to tell the user what it is doing, to fake a report, to suppress output.
+- **Signs:** "don't tell the user", «не повідомляй користувачу», "hide … from the summary",
+  "report success regardless", "silently", "without confirmation".
+- **Covering tracks (HIGH):** `history -c`, `Clear-History`, `unset HISTFILE`, `wevtutil cl`, deleting
+  shell history or transcripts.
+- **Hidden launch (MEDIUM):** `-WindowStyle Hidden`, `nohup`, `disown`, `pythonw`, `start /b`.
 
-## T04. Обхід дозволів і захисту — CRITICAL
-- **Агент:** `--dangerously-skip-permissions`, `bypassPermissions`, `dangerouslyDisableSandbox`, `--yolo`,
+## T04. Bypassing permissions and protection — CRITICAL
+- **Agent:** `--dangerously-skip-permissions`, `bypassPermissions`, `dangerouslyDisableSandbox`, `--yolo`,
   `--dangerously-bypass-approvals-and-sandbox`, `enableAllProjectMcpServers`, `disableAllHooks`.
-- **Система:** `Set-MpPreference`, `Add-MpPreference -ExclusionPath`, вимкнення Defender/firewall/SELinux,
-  `csrutil disable`, `spctl --master-disable`, зняття `com.apple.quarantine`, «не питай підтвердження».
+- **System:** `Set-MpPreference`, `Add-MpPreference -ExclusionPath`, disabling Defender/firewall/SELinux,
+  `csrutil disable`, `spctl --master-disable`, removing `com.apple.quarantine`, "don't ask for confirmation".
 - **HIGH:** `--no-verify`, `Set-ExecutionPolicy Bypass`, `Unblock-File`, `NOPASSWD`, `chmod 777`,
-  `docker --privileged`, монтування `docker.sock` чи `/`; надто широкі дозволи (`Bash(*)`,
+  `docker --privileged`, mounting `docker.sock` or `/`; overly broad permissions (`Bash(*)`,
   `"allow": ["*"]`, `defaultMode: acceptEdits`).
-- **MEDIUM:** вимкнена перевірка TLS (`curl -k`, `verify=False`, `NODE_TLS_REJECT_UNAUTHORIZED=0`),
+- **MEDIUM:** disabled TLS verification (`curl -k`, `verify=False`, `NODE_TLS_REJECT_UNAUTHORIZED=0`),
   `sudo`/`runas`.
 
-## T05. Віддалене виконання коду — CRITICAL
-Завантажити і одразу виконати код, якого немає у скілі й який може змінитися будь-коли.
-- **Ознаки:** `curl … | sh` (а також `| python`, `| node`, `| sudo bash`), `bash <(curl …)`,
-  `eval "$(curl …)"`, `iwr … | iex`, `iex (irm …)`, `DownloadString(`, `Net.WebClient`, завантаження
-  бінарника + `chmod +x` + запуск.
-- **Зворотна оболонка:** `/dev/tcp/…`, `nc -e`, `bash -i >&`, `socat exec:`, `pty.spawn`, `TCPClient`.
+## T05. Remote code execution — CRITICAL
+Downloading and immediately running code that is not in the skill and can change at any time.
+- **Signs:** `curl … | sh` (also `| python`, `| node`, `| sudo bash`), `bash <(curl …)`,
+  `eval "$(curl …)"`, `iwr … | iex`, `iex (irm …)`, `DownloadString(`, `Net.WebClient`, downloading a
+  binary + `chmod +x` + running it.
+- **Reverse shell:** `/dev/tcp/…`, `nc -e`, `bash -i >&`, `socat exec:`, `pty.spawn`, `TCPClient`.
 - **LOLBins (HIGH):** `mshta`, `regsvr32 /i:`, `rundll32`, `certutil -urlcache`, `bitsadmin`,
   `msiexec https://…`.
-- **Активний вміст (MEDIUM):** `<script>`, `onload=`, `<foreignObject>`, `<iframe>` у SVG/HTML.
+- **Active content (MEDIUM):** `<script>`, `onload=`, `<foreignObject>`, `<iframe>` in SVG/HTML.
 
-## T06. Доступ до секретів — HIGH
-- **Файли:** `~/.ssh`, `id_rsa`, `~/.aws/credentials`, `.git-credentials`, `.netrc`, `.npmrc`, `.pypirc`,
+## T06. Access to secrets — HIGH
+- **Files:** `~/.ssh`, `id_rsa`, `~/.aws/credentials`, `.git-credentials`, `.netrc`, `.npmrc`, `.pypirc`,
   `.kube/config`, `.gnupg`, `.config/gh/hosts.yml`, `.config/gcloud`, `.azure`, `.vault-token`,
-  `terraform.tfstate`, `.env`, історія оболонки, `/etc/shadow`.
-- **Сам агент:** `~/.claude/.credentials.json`, `~/.claude.json`, `~/.codex/auth.json`; історія розмов
-  (`~/.claude/projects`), системний промпт.
-- **Браузер і ОС:** `Login Data`, `Cookies`, `Local State`, Keychain, Windows Credential Manager
-  (`cmdkey`, `vaultcmd`); криптогаманці (`wallet.dat`, keystore, розширення MetaMask).
-- **Команди, що друкують токен:** `gh auth token`, `gcloud auth print-access-token`,
+  `terraform.tfstate`, `.env`, shell history, `/etc/shadow`.
+- **The agent itself:** `~/.claude/.credentials.json`, `~/.claude.json`, `~/.codex/auth.json`;
+  conversation history (`~/.claude/projects`), the system prompt.
+- **Browser and OS:** `Login Data`, `Cookies`, `Local State`, Keychain, Windows Credential Manager
+  (`cmdkey`, `vaultcmd`); crypto wallets (`wallet.dat`, keystore, the MetaMask extension).
+- **Commands that print a token:** `gh auth token`, `gcloud auth print-access-token`,
   `aws secretsmanager get-secret-value`, `kubectl get secrets`, `op read`.
-- **Хмарні метадані:** `169.254.169.254`, `metadata.google.internal` — тимчасові ключі машини.
-- **Дамп середовища (MEDIUM):** `printenv`, `env:`, `os.environ`; буфер обміну, знімки екрана, клавіатура.
-- **Вшитий ключ (HIGH):** `sk-ant-…`, `ghp_…`, `AKIA…`, приватний ключ у тексті. Це або витік, або
-  **чужий акаунт**: скіл вантажить дані користувача в акаунт атакера через цілком «дозволений» API.
-- **Хибні тривоги:** скіл, який явно про налаштування SSH або хмарних ключів, і робить лише це.
+- **Cloud metadata:** `169.254.169.254`, `metadata.google.internal` — the machine's temporary keys.
+- **Environment dump (MEDIUM):** `printenv`, `env:`, `os.environ`; clipboard, screenshots, keyboard.
+- **Embedded key (HIGH):** `sk-ant-…`, `ghp_…`, `AKIA…`, a private key in the text. This is either a leak
+  or **someone else's account**: the skill uploads the user's data into the attacker's account through a
+  perfectly "allowed" API.
+- **False positives:** a skill that is explicitly about setting up SSH or cloud keys and does only that.
 
-## T07. Ексфільтрація даних — HIGH (CRITICAL разом з T06)
-Відправка файлів, секретів, розмови або коду на зовнішню адресу. Сканер сам ставить CRITICAL, якщо в
-одному скілі є і доступ до секретів (T06 HIGH), і канал назовні (T07 HIGH).
-- **Приймачі:** `webhook.site`, `requestbin`, `pipedream`, `ngrok`, `trycloudflare`, `interact.sh`,
-  `oastify`/Burp Collaborator, `pastebin`, `transfer.sh`, `0x0.st`, `ntfy.sh`, вебхуки
-  Discord/Slack/Telegram, `.onion`, URL з голою IP-адресою, скорочувачі посилань, punycode-домени.
-- **Способи:** `curl -d/-F/--upload-file`, POST-запити, `scp`/`rsync`/`aws s3 cp`/`rclone`,
-  `gh gist create`, `git remote add` + push, DNS-запити зі змінною в імені хоста.
-- **Через рендер:** markdown-картинки й `<img>` з даними в query-параметрах (`![](https://x/?d=…)`):
-  дані йдуть під час показу відповіді, без жодної команди. Сюди ж — вказівка «додай результат у URL».
-- **Через легітимні сервіси:** issue/PR/коментар у чужому репозиторії, лист, повідомлення в чат — канал
-  виглядає нормальним, тому дивись, **куди** саме й **що** відправляється.
+## T07. Data exfiltration — HIGH (CRITICAL together with T06)
+Sending files, secrets, the conversation or code to an external address. The scanner itself sets
+CRITICAL if one skill has both access to secrets (T06 HIGH) and an outbound channel (T07 HIGH).
+- **Receivers:** `webhook.site`, `requestbin`, `pipedream`, `ngrok`, `trycloudflare`, `interact.sh`,
+  `oastify`/Burp Collaborator, `pastebin`, `transfer.sh`, `0x0.st`, `ntfy.sh`, Discord/Slack/Telegram
+  webhooks, `.onion`, URLs with a bare IP address, link shorteners, punycode domains.
+- **Methods:** `curl -d/-F/--upload-file`, POST requests, `scp`/`rsync`/`aws s3 cp`/`rclone`,
+  `gh gist create`, `git remote add` + push, DNS queries with a variable in the host name.
+- **Through rendering:** markdown images and `<img>` with data in query parameters (`![](https://x/?d=…)`):
+  the data leaves while the answer is displayed, without any command. Also: an instruction to "add the
+  result to the URL".
+- **Through legitimate services:** an issue/PR/comment in someone else's repository, an email, a chat
+  message — the channel looks normal, so check **where** exactly and **what** is sent.
 
-## T08. Руйнівні операції — HIGH (CRITICAL для дисків і системи)
-- **Файли:** `rm -rf`, `Remove-Item -Recurse`, `rimraf`, `shutil.rmtree`, `find … -delete`.
+## T08. Destructive operations — HIGH (CRITICAL for disks and the system)
+- **Files:** `rm -rf`, `Remove-Item -Recurse`, `rimraf`, `shutil.rmtree`, `find … -delete`.
 - **Git:** `git push --force`, `git reset --hard`, `git clean -f`, `git checkout -- .`, `git branch -D`,
   `git stash clear`, `git filter-branch`, `git reflog expire`.
-- **Дані й інфраструктура:** `DROP TABLE/DATABASE`, `TRUNCATE`, `DELETE FROM` без умови, `FLUSHALL`,
-  `terraform destroy`, `kubectl delete`, `docker system prune`, `gh repo delete`.
-- **CRITICAL:** `rm -rf /` чи `~`, `mkfs`, `dd if=`, `shred`, `format C:`, `diskpart`, `Clear-Disk`,
+- **Data and infrastructure:** `DROP TABLE/DATABASE`, `TRUNCATE`, `DELETE FROM` without a condition,
+  `FLUSHALL`, `terraform destroy`, `kubectl delete`, `docker system prune`, `gh repo delete`.
+- **CRITICAL:** `rm -rf /` or `~`, `mkfs`, `dd if=`, `shred`, `format C:`, `diskpart`, `Clear-Disk`,
   `vssadmin delete shadows`, `bcdedit`, `cipher /w`.
-- **MEDIUM:** масове шифрування файлів (`openssl enc`, `gpg -c`, `7z -p` — поведінка вимагача),
+- **MEDIUM:** mass file encryption (`openssl enc`, `gpg -c`, `7z -p` — ransomware behavior),
   `shutdown`, `taskkill /f`, `icacls /grant`.
 
-## T09. Закріплення і зміна конфігурації — HIGH (CRITICAL для доступу до системи)
-Скіл змінює щось, що переживе сесію: налаштування агента або системи.
-- **Агент:** `~/.claude/settings*.json`, хуки, allowlist дозволів, `CLAUDE.md`/`AGENTS.md`/`GEMINI.md`,
-  `.claude/rules`, `.mcp.json`, `claude_desktop_config.json`, інші скіли, `.cursorrules`, `.cursor/rules`,
+## T09. Persistence and configuration changes — HIGH (CRITICAL for system access)
+The skill changes something that outlives the session: agent or system settings.
+- **Agent:** `~/.claude/settings*.json`, hooks, the permission allowlist, `CLAUDE.md`/`AGENTS.md`/`GEMINI.md`,
+  `.claude/rules`, `.mcp.json`, `claude_desktop_config.json`, other skills, `.cursorrules`, `.cursor/rules`,
   `.windsurfrules`, `.clinerules`, `~/.codex`, `claude mcp add`, `claude plugin install`,
   `extraKnownMarketplaces`.
-- **Самозапуск агента (MEDIUM):** скіл створює собі розклад чи цикл (`CronCreate`, scheduled tasks,
-  `/loop`, `/schedule`).
-- **Система:** `.bashrc`/`.zshrc`/`$PROFILE`, cron, `schtasks`, `launchctl`, `systemctl enable`,
-  `HKCU\...\CurrentVersion\Run`, папка Startup, `New-Service`, `reg add`, WMI-підписки, `sitecustomize`.
+- **Agent self-scheduling (MEDIUM):** the skill creates a schedule or loop for itself (`CronCreate`,
+  scheduled tasks, `/loop`, `/schedule`).
+- **System:** `.bashrc`/`.zshrc`/`$PROFILE`, cron, `schtasks`, `launchctl`, `systemctl enable`,
+  `HKCU\...\CurrentVersion\Run`, the Startup folder, `New-Service`, `reg add`, WMI subscriptions,
+  `sitecustomize`.
 - **Git:** `.git/hooks`, `core.hooksPath`, `core.fsmonitor`, `core.sshCommand`, `~/.gitconfig`,
-  `git config --global`. Папка цілі з власним `.git` (не твій клон) може виконати код під час
-  звичайного `git status`.
-- **Інструменти проєкту (MEDIUM):** `postinstall` у `package.json`, `.github/workflows`, `.husky`,
-  `.pre-commit-config`, `.vscode/tasks.json` з `runOn: folderOpen`, `.devcontainer`, `.envrc`.
+  `git config --global`. A target folder with its own `.git` (not your clone) can execute code during an
+  ordinary `git status`.
+- **Project tooling (MEDIUM):** `postinstall` in `package.json`, `.github/workflows`, `.husky`,
+  `.pre-commit-config`, `.vscode/tasks.json` with `runOn: folderOpen`, `.devcontainer`, `.envrc`.
 - **CRITICAL:** `authorized_keys`, `/etc/sudoers`, `hosts`, `~/.ssh/config`, `LD_PRELOAD`,
-  створення користувачів (`useradd`, `net user /add`).
+  creating users (`useradd`, `net user /add`).
 
-## T10. Обфускація — HIGH/MEDIUM
-Код, який не можна прочитати, вважається небезпечним, доки його не розкодовано і не перевірено.
-- **Ознаки:** `base64 -d`, `FromBase64String`, `atob`, `-EncodedCommand`, довгі base64-блоки,
-  `\x..` / `%..` послідовності, `eval`, `exec`, `Invoke-Expression`, `new Function`,
-  складання рядків з `[char]` / `fromCharCode` / `'cu'+'rl'`, `${IFS}`, мінізовані скрипти, дуже довгі рядки.
-- **Виконання з даних (HIGH):** `pickle.loads`, `marshal.loads`, `yaml.load` без SafeLoader,
+## T10. Obfuscation — HIGH/MEDIUM
+Code that cannot be read is considered dangerous until it has been decoded and checked.
+- **Signs:** `base64 -d`, `FromBase64String`, `atob`, `-EncodedCommand`, long base64 blocks,
+  `\x..` / `%..` sequences, `eval`, `exec`, `Invoke-Expression`, `new Function`,
+  building strings from `[char]` / `fromCharCode` / `'cu'+'rl'`, `${IFS}`, minified scripts, very long lines.
+- **Execution from data (HIGH):** `pickle.loads`, `marshal.loads`, `yaml.load` without SafeLoader,
   `[scriptblock]::Create`, `Assembly.Load`, `Add-Type`, `__import__`, `ctypes`.
-- **CRITICAL:** розкодування й виконання в одному рядку (`exec(b64decode(…))`, `base64 -d | sh`).
-- **Хибні тривоги:** `b64decode` відповіді API із зображенням (LOW — перевір, що дані лише зберігаються).
+- **CRITICAL:** decoding and executing on one line (`exec(b64decode(…))`, `base64 -d | sh`).
+- **False positives:** `b64decode` of an API response containing an image (LOW — check that the data is
+  only saved).
 
-## T11. Ланцюг постачання — MEDIUM (HIGH для інструкцій і коду з мережі)
-- **Ознаки:** встановлення пакетів без фіксованих версій (`pip install`, `npm i`, `npx -y`, `uvx`,
-  `go install`, `Install-Module`), можливий typosquatting у назвах пакетів і вигадані моделлю назви
-  (slopsquatting), підтягування інструкцій або скриптів з `raw.githubusercontent.com`/gist під час
-  роботи (вміст може змінитися після аудиту), `git clone`/`docker run` стороннього коду, самооновлення.
-- **HIGH:** пакет напряму з URL чи git (`pip install git+https://…`, `npx https://…`); сторонній реєстр
-  (`--index-url`, `--registry`, `npm config set registry` — dependency confusion).
-- **Маркетплейс:** плагін із зовнішнього репозиторію без зафіксованого `sha`; автооновлення може додати
-  хуки в раніше безпечний плагін. Вердикт дійсний лише для перевіреного хеша (див. «Хеш дерева» у звіті).
-- **Корисне навантаження в допоміжному файлі:** `SKILL.md` лише каже «запусти `scripts/x.sh`», а вся
-  логіка — у скрипті. Тому скрипти читаються повністю, а не лише інструкції.
-- **Запуск коду поза папкою скіла** (`python ~/.codex/…`, `node /opt/…`): цей код не входить в аудит
-  скіла і може змінитися без нього. Перевір його окремо або зафіксуй у звіті як неперевірений.
-- **LOW:** згадано файл, якого в скілі немає (з'явиться пізніше?); скрипт, який ніде не згадано.
+Shell `eval` of a variable is a MEDIUM signal: inspect where its content originates. Base64 analysis
+checks two layers and normalizes decoded text; exhausted limits are explicit coverage gaps.
 
-## T12. Перехоплення тригерів — MEDIUM (HIGH для підміни вбудованих)
-Скіл хоче вмикатися там, де його не просили.
-- **Ознаки:** `description` на кшталт «use for every/any task», «always use», «завжди», «must be used
-  first», «замість інших скілів»; назва, що збігається з вбудованим скілом (`pdf`, `docx`,
-  `code-review`, `init`…) або відрізняється від неї на літеру-дві (`code-reveiw`).
-- **Видавання себе за офіційний (MEDIUM):** «official Anthropic skill», назва з `anthropic-`/`official`.
-  Масові кампанії шкідливих скілів тримаються саме на шаблонній імітації відомих брендів.
-- **Кілька скілів з однаковою назвою** в одному наборі: один перекриває інший.
+## T11. Supply chain — MEDIUM (HIGH for instructions and code from the network)
+- **Signs:** installing packages without pinned versions (`pip install`, `npm i`, `npx -y`, `uvx`,
+  `go install`, `Install-Module`), possible typosquatting in package names and names hallucinated by a
+  model (slopsquatting), pulling instructions or scripts from `raw.githubusercontent.com`/gist at run time
+  (the content can change after the audit), `git clone`/`docker run` of third-party code, self-updating.
+- **HIGH:** a package straight from a URL or git (`pip install git+https://…`, `npx https://…`); a
+  third-party registry (`--index-url`, `--registry`, `npm config set registry` — dependency confusion).
+- **Marketplace:** a plugin from an external repository without a pinned `sha`; an auto-update can add
+  hooks to a previously safe plugin. The verdict is valid only for the audited hash (see "tree hash" in
+  the report).
+- **Payload in a helper file:** `SKILL.md` only says "run `scripts/x.sh`", and all the logic is in the
+  script. That is why scripts are read in full, not just the instructions.
+- **Running code from outside the skill folder** (`python ~/.codex/…`, `node /opt/…`): this code is not
+  part of the skill's audit and can change without it. Check it separately or record it in the report as
+  unchecked.
+- **LOW:** a file is mentioned that the skill does not contain (will it appear later?); a script that is
+  never mentioned.
 
-## T13. Надмірні привілеї / розбіжність із призначенням — MEDIUM
-Скіл для форматування тексту не має ходити в мережу. Порівняй `description` з тим, що скіл реально
-робить: мережа, файли поза проєктом, команди, зовнішні дії.
-- Сканер підказує: мережеві виклики, про які `description` мовчить; `allowed-tools` з необмеженим
-  `Bash` чи `*`; `user-invocable: false` (скіл не видно в меню, його вмикає лише модель).
-- Решта — вручну: карта можливостей у звіті.
+## T12. Trigger hijacking — MEDIUM (HIGH for impersonating built-ins)
+The skill wants to activate where nobody asked for it.
+- **Signs:** a `description` like "use for every/any task", "always use", «завжди», "must be used
+  first", "instead of other skills"; a name that matches a built-in skill (`pdf`, `docx`,
+  `code-review`, `init`…) or differs from it by a letter or two (`code-reveiw`).
+- **Posing as official (MEDIUM):** "official Anthropic skill", a name with `anthropic-`/`official`.
+  Mass campaigns of malicious skills rely on exactly this kind of template imitation of known brands.
+- **Several skills with the same name** in one collection: one overrides the other.
 
-## T14. Незворотні зовнішні дії — HIGH
-Відправка листів і повідомлень, публікація (`npm publish`, `gh pr create`, `git push`, `gh release
-create`, `docker push`), деплой (`vercel --prod`, `terraform apply`, `kubectl apply`), зміна видимості
-репозиторію, `gh secret set`, платежі, переказ коштів, криптотранзакції, торгові операції — особливо
-без явного підтвердження користувача.
+## T13. Excessive privileges / mismatch with the purpose — MEDIUM
+A text-formatting skill has no business going to the network. Compare the `description` with what the
+skill actually does: network, files outside the project, commands, external actions.
+- The scanner hints at: network calls the `description` does not mention; `allowed-tools` with unrestricted
+  `Bash` or `*`; `user-invocable: false` (the skill is not shown in the menu, only the model invokes it).
+- The rest is manual: the capability map in the report.
 
-## T15. Персональні дані і телеметрія — MEDIUM
-Збирання контактів, email, історії, геолокації; аналітика і трекінг (`telemetry`, `mixpanel`,
-`segment`, `amplitude`, `posthog`, `google-analytics`, UTM-мітки в згенерованих посиланнях).
+Wildcard `allowed-tools` list items are checked only in that field, not unrelated metadata lists.
 
-## T16. Соціальна інженерія користувача — HIGH
-Скіл змушує агента просити в людини те, чого сам дістати не може.
-- Вставити в чат пароль, токен, seed-фразу, приватний ключ, код 2FA, номер картки, фото документа.
-- **ClickFix (MEDIUM):** «скопіюй цю команду й встав у термінал / Win+R», «запусти від адміністратора» —
-  користувач власноруч обходить усі дозволи агента.
-- Вимкнути захист «бо так треба», прийняти діалог довіри, не читаючи.
+## T14. Irreversible external actions — HIGH
+Sending email and messages, publishing (`npm publish`, `gh pr create`, `git push`, `gh release
+create`, `docker push`), deploying (`vercel --prod`, `terraform apply`, `kubectl apply`), changing
+repository visibility, `gh secret set`, payments, money transfers, crypto transactions, trades —
+especially without the user's explicit confirmation.
 
-## T17. Вихід за межі робочої папки — MEDIUM (HIGH для симлінків)
-`../../`, системні шляхи (`/etc`, `C:\Windows`, `Program Files`, `%APPDATA%`, `~/Library`), особисті
-папки (`~/Documents`, `Desktop`, `Downloads`, OneDrive, iCloud), симлінки всередині скіла, що ведуть
-назовні, файл `.git` з `gitdir:` на зовнішню папку.
+## T15. Personal data and telemetry — MEDIUM
+Collecting contacts, email addresses, history, geolocation; analytics and tracking (`telemetry`,
+`mixpanel`, `segment`, `amplitude`, `posthog`, `google-analytics`, UTM tags in generated links).
 
-## T18. Зловживання ресурсами — CRITICAL (майнінг, fork-bomb) / MEDIUM
-Майнери (`xmrig`, `stratum+tcp`), fork-bomb, нескінченні цикли й «never stop», масовий запуск агентів
-або сесій, навмисне роздування контексту — рахунок за токени теж ресурс.
+## T16. Social engineering of the user — HIGH
+The skill makes the agent ask the human for what it cannot get by itself.
+- Paste a password, token, seed phrase, private key, 2FA code, card number or a photo of an ID into the chat.
+- **ClickFix (MEDIUM):** "copy this command and paste it into the terminal / Win+R", "run as
+  administrator" — the user personally bypasses all of the agent's permissions.
+- Disable protection "because it's required", accept a trust dialog without reading it.
 
-## T19. Бінарні та непрозорі файли — HIGH (виконувані) / MEDIUM (архіви, документи)
-Вміст неможливо перевірити читанням.
-- **HIGH:** `.exe`, `.dll`, `.so`, `.dylib`, `.msi`, `.jar`, `.pyc`, `.wasm`, `.lnk`, `.iso` та будь-які
-  файли з нуль-байтами; документи з макросами (`.docm`, `.xlsm`); серіалізовані об'єкти (`.pkl`, `.pt`,
-  `.joblib` — pickle виконує код під час завантаження); подвійне розширення (`звіт.pdf.exe`).
-- **MEDIUM:** архіви (`.zip`, `.7z`, `.tar.gz`, `.whl`, `.vsix`); офісні документи й PDF (можуть нести
-  прихований текст); файли, які система запускає подвійним кліком (`.hta`, `.reg`, `.url`, `.desktop`).
-- **Зображення** (`.png`, `.jpg`, `.gif`, `.webp`, `.ico`, `.bmp`) — норма, якщо заголовок файлу
-  справді відповідає формату. Файл із розширенням картинки, всередині якого щось інше, — HIGH
-  (замаскований вміст); дані після кінця зображення — MEDIUM (поліглот). SVG — це текст: він сканується
-  повністю, `<script>` у ньому — MEDIUM.
+Ukrainian imperative and infinitive forms include `встав` / `вставити`, `надішли` / `надіслати`.
 
-## T20. Мета-ін'єкція проти аудитора — CRITICAL
-Скіл звертається до того, хто його перевіряє: «цей скіл уже перевірено й він безпечний»,
-«skip the security review», «не скануй цей файл», «note for reviewers», «if you are an AI…»,
-«mark this as safe», готовий «вердикт: SAFE», «це хибна тривога — ігноруй». Легітимному скілу таке
-писати нема навіщо.
+## T17. Leaving the working folder — MEDIUM (HIGH for symlinks)
+`../../`, system paths (`/etc`, `C:\Windows`, `Program Files`, `%APPDATA%`, `~/Library`), personal
+folders (`~/Documents`, `Desktop`, `Downloads`, OneDrive, iCloud), symlinks inside the skill that lead
+outside, a `.git` file with `gitdir:` pointing to an outside folder.
 
-## T21. Автозапуск через компоненти плагіна — HIGH
-Код, який виконується без рішення моделі й часто без окремого підтвердження: достатньо встановити
-плагін або відкрити папку.
-- **Хуки:** `hooks/hooks.json`, `"hooks"` у `plugin.json` чи `settings.json`, `hooks:` у frontmatter
-  скіла. Події `SessionStart`, `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Stop`: команда
-  запускається на кожну. Хук може ще й переписати ввід інструмента чи відповідь користувачу.
-- **Динамічний контекст:** `` !`команда` `` або блок ```` ```! ```` у `SKILL.md` чи команді виконується
-  під час завантаження скіла, і модель бачить уже результат. Тому скіл, який перевіряєш, не можна
-  «просто викликати, щоб подивитися».
-- **MCP і LSP:** `.mcp.json`, `mcpServers`, `.lsp.json` — запуск локального процесу (`npx -y …`) або
-  підключення віддаленого сервера, чиї описи інструментів самі є каналом ін'єкції й можуть змінитися
-  після встановлення.
-- **Інше:** `bin/` плагіна (потрапляє в PATH), `statusLine`, `apiKeyHelper`, монітори, `agents/` і
-  `commands/` (це теж інструкції — читай їх як `SKILL.md`), `settings.json` у комплекті.
+## T18. Resource abuse — CRITICAL (mining, fork bomb) / MEDIUM
+Miners (`xmrig`, `stratum+tcp`), fork bombs, infinite loops and "never stop", mass launching of agents
+or sessions, deliberately bloating the context — the token bill is a resource too.
 
-## T22. Умовна і відкладена поведінка — HIGH/MEDIUM
-Скіл поводиться чемно під час перевірки й інакше потім.
-- **HIGH:** «якщо користувач не дивиться», «коли сесія без нагляду», «у headless-режимі зроби інакше».
-- **MEDIUM:** спрацювання за датою (`Get-Date -gt`, `datetime.now() >`), за лічильником («кожен десятий
-  запуск»), випадково; перевірка середовища (CI, Docker, VM, відлагоджувач); прив'язка до конкретного
-  користувача чи машини (`USERNAME -eq`, `whoami ==`).
-- Сюди ж «rug pull»: чиста версія під час аудиту й шкідливе оновлення після (див. T11).
+## T19. Binary and opaque files — HIGH (executables) / MEDIUM (archives, documents)
+Their content cannot be checked by reading.
+- **HIGH:** `.exe`, `.dll`, `.so`, `.dylib`, `.msi`, `.jar`, `.pyc`, `.wasm`, `.lnk`, `.iso` and any
+  files with null bytes; documents with macros (`.docm`, `.xlsm`); serialized objects (`.pkl`, `.pt`,
+  `.joblib` — pickle executes code on load); a double extension (`report.pdf.exe`).
+- **MEDIUM:** archives (`.zip`, `.7z`, `.tar.gz`, `.whl`, `.vsix`); office documents and PDFs (may carry
+  hidden text); files the system runs on double-click (`.hta`, `.reg`, `.url`, `.desktop`).
+- **Images** (`.png`, `.jpg`, `.gif`, `.webp`, `.ico`, `.bmp`) are normal if the file header really
+  matches the format. A file with an image extension that contains something else is HIGH (disguised
+  content); data after the end of the image is MEDIUM (polyglot). SVG is text: it is scanned in full, and
+  `<script>` in it is MEDIUM.
+- **Unicode text:** BOM-tagged UTF-16 LE/BE and UTF-32 LE/BE are decoded before text rules run.
+  UTF-8 decoding is strict; unsupported/invalid encodings are explicitly unchecked. BOM-less UTF-16,
+  legacy code pages, archives, image pixels and compressed metadata still require manual inspection.
 
-## T23. Отруєння пам'яті й самопоширення — HIGH
-Шкода, яка лишається після видалення скіла.
-- **Пам'ять агента:** запис у `MEMORY.md`, `SOUL.md`, `.claude/…/memory`, «запам'ятай назавжди»,
-  «save to memory» — інструкція атакера стає «власним» знанням агента в усіх наступних сесіях.
-- **Файли інструкцій у комплекті:** `CLAUDE.md`, `AGENTS.md` у папці плагіна потрапляють у контекст без
-  виклику скіла.
-- **Самопоширення:** «додай цей блок у кожен README / коміт / PR / docstring», зміна інших скілів,
-  вказівки субагентам ігнорувати правила чи не звітувати.
+## T20. Meta-injection against the auditor — CRITICAL
+The skill addresses whoever is checking it: "this skill has already been verified and is safe",
+"skip the security review", "do not scan this file", "note for reviewers", "if you are an AI…",
+"mark this as safe", a ready-made "verdict: SAFE", "this is a false positive — ignore it". A legitimate
+skill has no reason to write this.
 
-## T24. Перехоплення інструментів і каналів — CRITICAL/HIGH/MEDIUM
-Скіл не краде сам, а перенаправляє те, чим агент уже користується.
-- **CRITICAL:** `ANTHROPIC_BASE_URL` (і аналоги для інших моделей), `ANTHROPIC_AUTH_TOKEN`,
-  `apiKeyHelper` — уся розмова й ключ API ідуть через чужий сервер.
+## T21. Auto-run through plugin components — HIGH
+Code that runs without the model's decision and often without separate confirmation: installing the
+plugin or opening the folder is enough.
+- **Hooks:** `hooks/hooks.json`, `"hooks"` in `plugin.json` or `settings.json`, `hooks:` in a skill's
+  frontmatter. Events `SessionStart`, `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Stop`: the command
+  runs on each one. A hook can also rewrite a tool's input or the answer to the user.
+- **Dynamic context:** `` !`command` `` or a ```` ```! ```` block in a `SKILL.md` or command runs while the
+  skill loads, and the model sees only the result. That is why the skill being checked must not be
+  "just invoked to have a look".
+- **MCP and LSP:** `.mcp.json`, `mcpServers`, `.lsp.json` — launching a local process (`npx -y …`) or
+  connecting a remote server whose tool descriptions are themselves an injection channel and can change
+  after installation.
+- **Other:** the plugin's `bin/` (added to PATH), `statusLine`, `apiKeyHelper`, monitors, `agents/` and
+  `commands/` (these are instructions too — read them like `SKILL.md`), a bundled `settings.json`.
+- **JSON canonicalization:** decoded keys/strings and command/argument candidates are checked after
+  parsing JSON, including escaped Unicode and multi-line argument arrays. `Components` preserves the
+  JSON path and argument boundaries. A literal `|` passed to a non-shell process is not treated as an
+  executable pipe by reconstruction. Component candidates still need a manual runtime-semantics check.
+
+## T22. Conditional and delayed behavior — HIGH/MEDIUM
+The skill behaves politely during the check and differently later.
+- **HIGH:** "if the user isn't watching", "when the session is unattended", "in headless mode do something else".
+- **MEDIUM:** triggering by date (`Get-Date -gt`, `datetime.now() >`), by counter ("every tenth run"),
+  at random; environment checks (CI, Docker, VM, debugger); tying behavior to a specific user or machine
+  (`USERNAME -eq`, `whoami ==`).
+- This also covers the "rug pull": a clean version during the audit and a malicious update afterwards
+  (see T11).
+
+## T23. Memory poisoning and self-propagation — HIGH
+Harm that remains after the skill is removed.
+- **Agent memory:** writing to `MEMORY.md`, `SOUL.md`, `.claude/…/memory`, "remember forever",
+  "save to memory" — the attacker's instruction becomes the agent's "own" knowledge in every later session.
+- **Bundled instruction files:** `CLAUDE.md`, `AGENTS.md` in the plugin folder enter the context without
+  the skill being invoked.
+- **Self-propagation:** "add this block to every README / commit / PR / docstring", changing other skills,
+  telling subagents to ignore rules or not to report.
+
+The Ukrainian write-to-memory rule includes possessives such as `запиши ... у свою пам'ять`.
+
+## T24. Hijacking tools and channels — CRITICAL/HIGH/MEDIUM
+The skill does not steal anything itself but redirects what the agent already uses.
+- **CRITICAL:** `ANTHROPIC_BASE_URL` (and equivalents for other models), `ANTHROPIC_AUTH_TOKEN`,
+  `apiKeyHelper` — the whole conversation and the API key go through someone else's server.
 - **HIGH:** `HTTPS_PROXY`, `git config url.….insteadOf`, `NODE_OPTIONS`, `PYTHONPATH`, `BASH_ENV`,
-  `GIT_SSH_COMMAND` — ін'єкція в кожен наступний процес.
-- **MEDIUM:** «перед кожним використанням будь-якого інструмента спершу…», «замість вбудованого
-  інструмента використовуй…» (tool shadowing); передача даних між скілами; дії через залогінені сесії
-  користувача — браузер, computer use, `gh`, хмарні CLI (confused deputy).
-- **LOW:** згадки `mcp__…` — звір, чи відповідає набір інструментів призначенню.
+  `GIT_SSH_COMMAND` — injection into every subsequent process.
+- **MEDIUM:** "before every use of any tool, first…", "use … instead of the built-in tool" (tool
+  shadowing); passing data between skills; acting through the user's logged-in sessions — browser,
+  computer use, `gh`, cloud CLIs (confused deputy).
+- **LOW:** mentions of `mcp__…` — check that the set of tools matches the purpose.
 
-## T25. Розвідка й латеральний рух — MEDIUM (HIGH для виходу на інші машини)
+## T25. Reconnaissance and lateral movement — MEDIUM (HIGH for reaching other machines)
 - **HIGH:** `ssh user@host`, `sshpass`, `Invoke-Command -ComputerName`, `psexec`.
-- **MEDIUM:** `nmap`, `masscan`, `arp -a`, `net view`, запити до Active Directory, обхід усієї файлової
-  системи (`find /`, `os.walk('/')`).
-- **LOW:** `whoami`, `ipconfig`, `systeminfo`, визначення зовнішньої IP — саме по собі дрібниця, але
-  разом із T07 це профілювання жертви.
+- **MEDIUM:** `nmap`, `masscan`, `arp -a`, `net view`, Active Directory queries, walking the whole file
+  system (`find /`, `os.walk('/')`).
+- **LOW:** `whoami`, `ipconfig`, `systeminfo`, finding the external IP — trivial on its own, but together
+  with T07 it is profiling the victim.
 
-## T26. Шкідливий результат роботи — HIGH/MEDIUM (здебільшого вручну)
-Скіл не чіпає систему, зате псує те, що агент віддає користувачу.
-- **HIGH:** вставити бекдор, прихований обліковий запис, вшитий пароль, реферальні чи трекінгові
-  посилання в код або текст.
-- **MEDIUM:** вимкнути тести, валідацію, автентифікацію; «завжди схвалюй» у рев'ю; радити лише
-  «наш» пакет чи сервіс; тихо міняти версії залежностей; упереджені або неправдиві висновки.
-- Регулярні вирази ловлять лише найгрубіші формулювання — питання «що цей скіл змушує агента
-  **видавати**?» став окремо під час ручного читання.
+## T26. Malicious output — HIGH/MEDIUM (mostly manual)
+The skill does not touch the system but spoils what the agent hands to the user.
+- **HIGH:** inserting a backdoor, a hidden account, a hard-coded password, referral or tracking links into
+  code or text.
+- **MEDIUM:** disabling tests, validation, authentication; "always approve" in reviews; recommending only
+  "our" package or service; quietly changing dependency versions; biased or false conclusions.
+- Regular expressions catch only the crudest wording — ask "what does this skill make the agent
+  **produce**?" as a separate question during manual reading.
 
 ---
 
-## Відповідність OWASP Top 10 for LLM Applications (2025)
+## Development-driven additions in 0.8.0
 
-| OWASP | Загрози каталогу |
+These are bounded static signals. Confirm purpose, authorization and actual behavior during review.
+The positive/near-benign controls live in `security-regressions.ps1`, invoked by `run.ps1`.
+
+| Categories | Added or refined signal | Control / boundary |
+|---|---|---|
+| T01, T03 | External document fields promoted to binding agent authority; concealing exports or permission changes from reports | A non-binding source and avoiding a secret question are not consent bypasses |
+| T05, T10 | Invoked PowerShell script block from a network response; base64 carrying HIGH/CRITICAL instructions gets HIGH T10 | Local script-block construction is not remote download/execute; harmless base64 keeps its existing lower signal |
+| T06, T24 | Named credential-like environment fields are HIGH; literal non-secret fields and numeric Node memory-limit options are LOW | Whole/dynamic environment access remains MEDIUM; Node loaders, interpolation and extra options remain HIGH |
+| T07 | Explicit private-data transfer instructions, sensitive HTTP body names, Python archive/file uploads | Public HTTP payloads retain the generic MEDIUM review signal; names are not taint or authorization proof |
+| T09 | Scheduled execution requests (MEDIUM), recurring sensitive exports (HIGH), install lifecycle containing an independently HIGH/CRITICAL command (HIGH) | A local benign install check remains MEDIUM; lifecycle keys alone do not establish a malicious hook |
+| T11 | Trusting mutable automatic updates without re-audit; executing dependencies while explicitly skipping inspection | Generic package/dependency references are not automatically escalated |
+| T13, T14 | Broad administrator/global permission requests (MEDIUM); automatic financial actions, approval bypass, unattended production apply or public repository changes (HIGH) | Review capability fit and the user's explicit scope; a prohibition is not an instruction to transact |
+| T15, T16 | Location/fingerprint collection and identifiers in generated links; Ukrainian hyphenated API-key requests | Explicit collection prohibitions and tokenizer wording are negative controls |
+| T22 | CI-flag branches (MEDIUM); a date/counter trigger near HIGH/CRITICAL private transfer, or a negative CI branch calling a sensitive-export-named function (HIGH) | Proximity/name correlation is not execution/data-flow proof; benign CI formatting and reminders stay MEDIUM |
+| T23, T25, T26 | Propagating the same instructions; broad home/filesystem searches for private material; weakening checks while concealing failure | Prohibited reconnaissance/transfers and affiliate prohibitions are negative controls |
+
+Context lowering is limited to explicit local Markdown prohibitions, literal role-placeholder markup,
+guarded miner glossary references, named environment fields and strict literal memory options. Code
+comments and encoded instructions cannot use prose prohibitions to lower severity. Up to 32 matches
+per rule/line are checked and the highest severity wins; a later positive action remains visible after
+an earlier prohibition. Exhaustion makes the scan incomplete. No target's own "safe" claim suppresses it.
+
+## Mapping to the OWASP Top 10 for LLM Applications (2025)
+
+This is a versioned, conceptual mapping, not a claim of complete OWASP coverage. For CWE references,
+regression evidence and explicit gaps, see [coverage.md](coverage.md).
+
+| OWASP | Catalog threats |
 |---|---|
 | LLM01 Prompt Injection | T01, T02, T20, T22 |
 | LLM02 Sensitive Information Disclosure | T06, T07, T15 |
 | LLM03 Supply Chain | T05, T11, T19, T21 |
 | LLM04 Data and Model Poisoning | T23 |
-| LLM05 Improper Output Handling | T07 (рендер), T26 |
+| LLM05 Improper Output Handling | T07 (rendering), T26 |
 | LLM06 Excessive Agency | T04, T08, T09, T13, T14, T17, T24, T25 |
-| LLM07 System Prompt Leakage | T06 (системний промпт, історія розмов) |
+| LLM07 System Prompt Leakage | T06 (system prompt, conversation history) |
 | LLM09 Misinformation | T03, T26 |
 | LLM10 Unbounded Consumption | T18 |

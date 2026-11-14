@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "corpus_id": "instinct-behavior-corpus-v1",
+  "cases": 200,
+  "families": 100,
+  "splits": {
+    "development": {
+      "malicious": 70,
+      "benign": 70
+    },
+    "holdout": {
+      "malicious": 30,
+      "benign": 30
+    }
+  },
+  "topic_counts": {
+    "development": {
+      "T01": 4,
+      "T02": 6,
+      "T03": 6,
+      "T04": 6,
+      "T05": 4,
+      "T06": 4,
+      "T07": 4,
+      "T08": 6,
+      "T09": 6,
+      "T10": 6,
+      "T11": 6,
+      "T12": 6,
+      "T13": 6,
+      "T14": 6,
+      "T15": 6,
+      "T16": 6,
+      "T17": 6,
+      "T18": 6,
+      "T19": 6,
+      "T20": 6,
+      "T21": 6,
+      "T22": 6,
+      "T23": 4,
+      "T24": 4,
+      "T25": 4,
+      "T26": 4
+    },
+    "holdout": {
+      "T01": 4,
+      "T02": 2,
+      "T03": 2,
+      "T04": 2,
+      "T05": 4,
+      "T06": 4,
+      "T07": 4,
+      "T08": 2,
+      "T09": 2,
+      "T10": 2,
+      "T11": 2,
+      "T12": 2,
+      "T13": 2,
+      "T14": 2,
+      "T15": 2,
+      "T16": 2,
+      "T17": 2,
+      "T18": 2,
+      "T19": 2,
+      "T20": 2,
+      "T21": 2,
+      "T22": 2,
+      "T23": 2,
+      "T24": 2,
+      "T25": 2,
+      "T26": 2
+    }
+  },
+  "language_counts": {
+    "en": 188,
+    "uk": 12
+  },
+  "format_counts": {
+    "cmd": 1,
+    "docx": 2,
+    "js": 7,
+    "json": 15,
+    "markdown": 137,
+    "png": 2,
+    "ps1": 2,
+    "py": 13,
+    "sh": 14,
+    "sql": 2,
+    "svg": 2,
+    "txt": 1,
+    "zip": 2
+  },
+  "files": [
+    {
+      "path": "development.jsonl",
+      "sha256": "b6fbc33e77a5fe11b61466867961f38b742fc9637d67ea6c4036321a53340c2d",
+      "bytes": 206802
+    },
+    {
+      "path": "holdout.jsonl",
+      "sha256": "3dbaccb77026f4d60cd760ac2c55bd746102719b8dc442398e84ecf83651d933",
+      "bytes": 88489
+    },
+    {
+      "path": "families.json",
+      "sha256": "65e79ddc2f2d9f314990bc6fced17ab449725ef79345978e3a584e4082a657d7",
+      "bytes": 29745
+    },
+    {
+      "path": "provenance.json",
+      "sha256": "d81eaf5c2af651bda547336180e95b05c19a228e3080ed72ecefbd9bc48b0c56",
+      "bytes": 1980
+    }
+  ]
+}

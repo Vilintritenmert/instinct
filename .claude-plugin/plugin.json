@@ -1,6 +1,6 @@
 {
-  "name": "instict",
-  "version": "0.5.1",
+  "name": "instinct",
+  "version": "0.8.0",
   "license": "MIT",
-  "description":"Набір кастомних скілів для агентів / A collection of custom agent skills."
+  "description": "A collection of custom agent skills."
 }

@@ -1,10 +1,12 @@
 #Requires -Version 7.0
-# Регресійний тест сканера how-deep-the-rabbit-hole-goes.
-#   evil-skill    — класичний шкідливий скіл: мають знайтися всі очікувані загрози;
-#   evil-plugin   — шкідливий плагін: хуки, MCP, маркетплейс, typosquatting, T21–T26;
-#   evasion-skill — прийоми обходу: гомогліфи, base64, перенос рядка, псевдозаперечення, поліглот;
-#   benign-skill  — легітимні патерни: нічого вище LOW;
-#   clean-skill   — жодної знахідки.
+# Regression test for the how-deep-the-rabbit-hole-goes scanner.
+#   evil-skill    — a classic malicious skill: every expected threat must be found;
+#   evil-plugin   — a malicious plugin: hooks, MCP, marketplace, typosquatting, T21–T26;
+#   evasion-skill — evasion tricks: homoglyphs, base64, line continuation, pseudo-negation, polyglot;
+#   benign-skill  — legitimate patterns: nothing above LOW;
+#   clean-skill   — no findings at all.
+# The Ukrainian text in the samples is intentional: it exercises the scanner's Ukrainian rules.
+param([string]$SecurityReportPath)
 $ErrorActionPreference = 'Stop'
 $scan = Join-Path $PSScriptRoot '../../skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1'
 $script:failed = 0
@@ -13,11 +15,11 @@ function Invoke-Scan([string]$name) {
     $out = pwsh -NoProfile -File $scan -Path (Join-Path $PSScriptRoot $name) -Json
     $code = $LASTEXITCODE
     try { $r = $out | ConvertFrom-Json } catch { $r = $null }
-    if (-not $r) { Write-Host "✗ ${name}: сканер не повернув JSON (код $code)" -ForegroundColor Red; $script:failed++; return $null }
+    if (-not $r) { Write-Host "x ${name}: the scanner returned no JSON (exit code $code)" -ForegroundColor Red; $script:failed++; return $null }
     $r | Add-Member ExitCode $code -PassThru
 }
 function Assert([bool]$ok, [string]$msg) {
-    if ($ok) { Write-Host "✓ $msg" -ForegroundColor Green } else { Write-Host "✗ $msg" -ForegroundColor Red; $script:failed++ }
+    if ($ok) { Write-Host "OK $msg" -ForegroundColor Green } else { Write-Host "x  $msg" -ForegroundColor Red; $script:failed++ }
 }
 function Has($r, [string]$threat, [string]$sev, [string]$noteLike = '*', [string]$fileLike = '*') {
     [bool]($r.Findings | Where-Object { $_.Threat -eq $threat -and $_.Severity -eq $sev -and $_.Note -like $noteLike -and $_.File -like $fileLike })
@@ -27,58 +29,62 @@ function Has($r, [string]$threat, [string]$sev, [string]$noteLike = '*', [string
 if ($evil = Invoke-Scan 'evil-skill') {
     $expected = 'T01', 'T02', 'T03', 'T04', 'T05', 'T06', 'T07', 'T08', 'T09', 'T10', 'T11', 'T12', 'T16', 'T20'
     $missing = $expected | Where-Object { $_ -notin $evil.Findings.Threat }
-    Assert (-not $missing) "evil-skill: знайдено всі $($expected.Count) очікуваних загроз$(if ($missing) { " — бракує $($missing -join ', ')" })"
-    foreach ($note in 'поза папкою скіла', 'дані, а не інструкції', 'не відповідає вмісту', 'розкодування') {
-        Assert ([bool]($evil.Findings | Where-Object { $_.Note -like "*$note*" })) "evil-skill: є знахідка «$note»"
+    Assert (-not $missing) "evil-skill: all $($expected.Count) expected threats found$(if ($missing) { " — missing $($missing -join ', ')" })"
+    foreach ($note in 'outside the skill folder', 'data, not instructions', 'does not match the content', 'decode + execute') {
+        Assert ([bool]($evil.Findings | Where-Object { $_.Note -like "*$note*" })) "evil-skill: has a '$note' finding"
     }
-    Assert (Has $evil 'T06' 'HIGH') 'evil-skill: «НЕ» у заголовку H1 не знижує рівень секретів'
-    Assert (Has $evil 'T07' 'CRITICAL' '*комбінація*') 'evil-skill: секрети + канал назовні = CRITICAL'
-    Assert (Has $evil 'T05' 'CRITICAL' '*розкодованому base64*') 'evil-skill: -EncodedCommand розкодовано й перевірено'
-    Assert ($evil.ExitCode -eq 2) 'evil-skill: код виходу 2'
-    Assert ($evil.TreeHash -match '^[0-9a-f]{64}$' -and $evil.Inventory.Count -eq 2) 'evil-skill: є хеш дерева та інвентар'
+    Assert (Has $evil 'T06' 'HIGH') 'evil-skill: a negation in the H1 heading does not lower the secrets severity'
+    Assert (Has $evil 'T07' 'CRITICAL' '*combination*') 'evil-skill: secrets + outbound channel = CRITICAL'
+    Assert (Has $evil 'T05' 'CRITICAL' '*in decoded base64*') 'evil-skill: -EncodedCommand decoded and checked'
+    Assert ($evil.ExitCode -eq 2) 'evil-skill: exit code 2'
+    Assert ($evil.TreeHash -match '^[0-9a-f]{64}$' -and $evil.Inventory.Count -eq 2) 'evil-skill: tree hash and inventory present'
 }
 
 # ---------- evil-plugin ----------
 if ($plugin = Invoke-Scan 'evil-plugin') {
     $expected = 'T11', 'T12', 'T13', 'T21', 'T22', 'T23', 'T24', 'T25', 'T26'
     $missing = $expected | Where-Object { $_ -notin $plugin.Findings.Threat }
-    Assert (-not $missing) "evil-plugin: знайдено всі $($expected.Count) очікуваних загроз$(if ($missing) { " — бракує $($missing -join ', ')" })"
-    Assert (Has $plugin 'T21' 'HIGH' '*хуки плагіна*' 'hooks/hooks.json') 'evil-plugin: hooks.json позначено як автозапуск'
-    Assert (Has $plugin 'T05' 'CRITICAL' '*' 'hooks/hooks.json') 'evil-plugin: команду хука перевірено правилами'
-    Assert (Has $plugin 'T21' 'HIGH' '*MCP-сервери*' '.mcp.json') 'evil-plugin: .mcp.json позначено'
-    Assert (Has $plugin 'T21' 'HIGH' '*динамічна команда*') 'evil-plugin: динамічна команда !`…` у SKILL.md'
-    Assert (Has $plugin 'T11' 'MEDIUM' '*без зафіксованого sha*') 'evil-plugin: зовнішнє джерело в marketplace.json'
-    Assert (Has $plugin 'T12' 'HIGH' '*typosquatting*') 'evil-plugin: назва-двійник вбудованого скіла'
-    Assert (Has $plugin 'T24' 'CRITICAL' '*API-трафіку*') 'evil-plugin: підміна ANTHROPIC_BASE_URL'
-    Assert (Has $plugin 'T05' 'CRITICAL' '*reverse shell*') 'evil-plugin: зворотна оболонка'
+    Assert (-not $missing) "evil-plugin: all $($expected.Count) expected threats found$(if ($missing) { " — missing $($missing -join ', ')" })"
+    Assert (Has $plugin 'T21' 'HIGH' '*plugin hooks*' 'hooks/hooks.json') 'evil-plugin: hooks.json flagged as auto-run'
+    Assert (Has $plugin 'T05' 'CRITICAL' '*' 'hooks/hooks.json') 'evil-plugin: the hook command is checked by the rules'
+    Assert (Has $plugin 'T21' 'HIGH' '*MCP servers*' '.mcp.json') 'evil-plugin: .mcp.json flagged'
+    Assert (Has $plugin 'T21' 'HIGH' '*dynamic command*') 'evil-plugin: dynamic !`…` command in SKILL.md'
+    Assert (Has $plugin 'T11' 'MEDIUM' '*without a pinned sha*') 'evil-plugin: external source in marketplace.json'
+    Assert (Has $plugin 'T12' 'HIGH' '*typosquatting*') 'evil-plugin: look-alike of a built-in skill name'
+    Assert (Has $plugin 'T24' 'CRITICAL' '*API traffic*') 'evil-plugin: ANTHROPIC_BASE_URL override'
+    Assert (Has $plugin 'T05' 'CRITICAL' '*reverse shell*') 'evil-plugin: reverse shell'
 }
 
 # ---------- evasion-skill ----------
 if ($evasion = Invoke-Scan 'evasion-skill') {
-    Assert (Has $evasion 'T01' 'CRITICAL' '*нормалізації*') 'evasion-skill: гомогліф у «ignore previous instructions»'
-    Assert (Has $evasion 'T05' 'CRITICAL' '*розкодованому base64*') 'evasion-skill: curl | bash усередині base64'
-    Assert (Has $evasion 'T05' 'CRITICAL' '*' 'scripts/setup.sh') 'evasion-skill: curl | sh, розбитий переносом рядка'
-    Assert ((Has $evasion 'T06' 'HIGH') -and -not ($evasion.Findings | Where-Object { $_.Threat -eq 'T06' -and $_.Note -like '*заборони*' })) 'evasion-skill: «do not forget» не вважається забороною'
-    Assert (Has $evasion 'T03' 'MEDIUM' 'without confirmation') 'evasion-skill: «without confirmation» не знижує сам себе'
-    Assert (Has $evasion 'T02' 'CRITICAL' '*невидимі*') 'evasion-skill: variation selectors (U+E0100…)'
-    Assert (Has $evasion 'T02' 'MEDIUM' '*текст посилання*') 'evasion-skill: посилання показує один домен, а веде на інший'
-    Assert (Has $evasion 'T19' 'MEDIUM' '*після кінця зображення*') 'evasion-skill: дані після кінця PNG'
-    Assert (Has $evasion 'T02' 'HIGH' '*усередині зображення*') 'evasion-skill: текст-інструкція всередині зображення'
-    Assert (Has $evasion 'T19' 'HIGH' '*подвійне розширення*') 'evasion-skill: подвійне розширення'
+    Assert (Has $evasion 'T01' 'CRITICAL' '*after normalization*') 'evasion-skill: homoglyph in "ignore previous instructions"'
+    Assert (Has $evasion 'T05' 'CRITICAL' '*in decoded base64*') 'evasion-skill: curl | bash inside base64'
+    Assert (Has $evasion 'T05' 'CRITICAL' '*' 'scripts/setup.sh') 'evasion-skill: curl | sh split by a line continuation'
+    Assert ((Has $evasion 'T06' 'HIGH') -and -not ($evasion.Findings | Where-Object { $_.Threat -eq 'T06' -and $_.Note -like '*prohibition context*' })) 'evasion-skill: "do not forget" is not treated as a prohibition'
+    Assert (Has $evasion 'T03' 'MEDIUM' 'without confirmation') 'evasion-skill: "without confirmation" does not lower itself'
+    Assert (Has $evasion 'T02' 'CRITICAL' '*invisible*') 'evasion-skill: variation selectors (U+E0100…)'
+    Assert (Has $evasion 'T02' 'MEDIUM' '*link text shows*') 'evasion-skill: link shows one domain but leads to another'
+    Assert (Has $evasion 'T19' 'MEDIUM' '*after the end of the image*') 'evasion-skill: data after the end of the PNG'
+    Assert (Has $evasion 'T02' 'HIGH' '*inside the image*') 'evasion-skill: instruction text inside an image'
+    Assert (Has $evasion 'T19' 'HIGH' '*double extension*') 'evasion-skill: double extension'
 }
 
-# ---------- benign-skill: легітимні патерни (заборони, PNG, shebang, SVG-коментарі, base64 з API) ----------
+# ---------- benign-skill: legitimate patterns (prohibitions, PNG, shebang, SVG comments, base64 from an API) ----------
 if ($benign = Invoke-Scan 'benign-skill') {
     $noisy = @($benign.Findings | Where-Object Severity -ne 'LOW')
     $noisy | ForEach-Object { Write-Host "  $($_.Severity) $($_.Threat) $($_.File):$($_.Line) $($_.Note)" -ForegroundColor Red }
-    Assert (-not $noisy -and $benign.ExitCode -eq 0) "benign-skill: нічого вище LOW (LOW: $(@($benign.Findings).Count))"
+    Assert (-not $noisy -and $benign.ExitCode -eq 0) "benign-skill: nothing above LOW (LOW: $(@($benign.Findings).Count))"
 }
 
 # ---------- clean-skill ----------
 if ($clean = Invoke-Scan 'clean-skill') {
-    Assert (-not $clean.Findings.Count) "clean-skill: без знахідок$(if ($clean.Findings.Count) { " — хибні тривоги: $($clean.Findings.Threat -join ', ')" })"
+    Assert (-not $clean.Findings.Count) "clean-skill: no findings$(if ($clean.Findings.Count) { " — false positives: $($clean.Findings.Threat -join ', ')" })"
 }
 
+# Additional probes are generated as inert files and removed after the scan.
+pwsh -NoProfile -File (Join-Path $PSScriptRoot 'security-regressions.ps1') -ReportPath $SecurityReportPath
+Assert ($LASTEXITCODE -eq 0) 'security-regressions: targeted positive, negative and robustness probes pass'
+
 Write-Host ''
-if ($script:failed) { Write-Host "Провалено перевірок: $script:failed" -ForegroundColor Red } else { Write-Host 'Усі перевірки пройдено.' -ForegroundColor Green }
+if ($script:failed) { Write-Host "Failed checks: $script:failed" -ForegroundColor Red } else { Write-Host 'All checks passed.' -ForegroundColor Green }
 exit $script:failed
