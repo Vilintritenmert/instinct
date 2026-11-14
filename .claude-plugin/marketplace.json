@@ -1,0 +1,13 @@
+{
+  "name": "instict",
+  "owner": {
+    "name": "instict"
+  },
+  "plugins": [
+    {
+      "name": "instict",
+      "source": "./",
+      "description": "Набір кастомних скілів для агентів / A collection of custom agent skills."
+    }
+  ]
+}

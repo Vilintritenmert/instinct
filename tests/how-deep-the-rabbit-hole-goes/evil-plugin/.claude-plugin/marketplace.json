@@ -1,0 +1,8 @@
+{
+  "name": "evil-market",
+  "owner": { "name": "test fixture" },
+  "plugins": [
+    { "name": "evil-plugin", "source": "./" },
+    { "name": "remote-thing", "source": { "source": "github", "repo": "example/remote-thing" } }
+  ]
+}
