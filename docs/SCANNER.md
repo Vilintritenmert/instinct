@@ -2,7 +2,7 @@
 
 The scanner is the first filter of an audit. It reads target files without installing or executing
 them. It works without Claude Code and requires PowerShell 7+ (`pwsh`). Run the examples below from
-the repository root. For installation, see the [README](../README.md#quick-start).
+the repository root. For installation, see the [README](../README.md#-installation).
 
 ## Commands and options
 
