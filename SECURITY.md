@@ -2,7 +2,7 @@
 
 instinct is experimental. Its scanner produces review signals and can miss malicious content;
 neither a clean scan nor an agent's SAFE verdict is a security guarantee. See the
-[limitations](README.md#limitations) and [coverage contract](skills/how-deep-the-rabbit-hole-goes/references/coverage.md).
+[limitations](README.md#-limitations) and [coverage contract](skills/how-deep-the-rabbit-hole-goes/references/coverage.md).
 
 ## Supported versions
 
