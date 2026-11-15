@@ -54,7 +54,7 @@ with evidence by file and line.
 
 | Requirement | Needed for | Notes |
 |---|---|---|
-| [Claude Code](https://code.claude.com/docs/en/overview) with plugin support | The audit skill | Any version that supports `claude plugin` commands |
+| [Claude Code](https://code.claude.com/docs/en/overview) with plugin support | The audit skill | 2.1.275+ for the one-line install; older versions use the two-step form |
 | [PowerShell 7+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) on `PATH` as `pwsh` | The scanner | Without it, the agent falls back to a manual review against the threat catalog |
 | Git | The standalone scanner | Only needed to clone this repository |
 
@@ -63,40 +63,35 @@ with evidence by file and line.
 
 ## 📦 Installation
 
-Run in your terminal:
+Inside Claude Code, run:
+
+```text
+/plugin install instinct --marketplace Vilintritenmert/instinct
+/reload-plugins
+```
+
+<details>
+<summary><b>Older Claude Code, or prefer the terminal?</b></summary>
+
+<br>
+
+The one-line form needs Claude Code 2.1.275 or later. On older versions, or from a terminal, install in
+two steps and then start a new session:
 
 ```bash
 claude plugin marketplace add Vilintritenmert/instinct
 claude plugin install instinct@instinct
-claude
 ```
 
-> [!TIP]
-> If you work from a local clone, run `claude plugin marketplace add .` from the repository root instead of
-> adding the GitHub source.
-
-<details>
-<summary><b>Update or uninstall</b></summary>
-
-<br>
-
-To update, refresh the marketplace, update the plugin and start a new Claude Code session:
-
-```bash
-claude plugin marketplace update instinct
-claude plugin update instinct@instinct
-```
-
-Uninstall:
-
-```bash
-claude plugin uninstall instinct@instinct
-```
-
-See the official [plugin command reference](https://code.claude.com/docs/en/plugins/cli-reference) for
-installation scopes and command details.
+See the [plugin command reference](https://code.claude.com/docs/en/plugins/cli-reference) for
+installation scopes.
 
 </details>
+
+**Updates:** Claude Code doesn't auto-update third-party plugins by default. Turn it on for the
+**instinct** marketplace on the Marketplaces tab of `/plugin`, or update by hand with
+`claude plugin marketplace update instinct` and `claude plugin update instinct@instinct`, then run
+`/reload-plugins`. To remove the plugin, run `claude plugin uninstall instinct@instinct`.
 
 ## 🚀 Usage
 
@@ -335,7 +330,16 @@ compared with those from earlier scanner versions. See the [scanner guide](docs/
 ## 🤝 Contributing
 
 Contributions are welcome. New detection rules, false-positive reports and testing on macOS and
-Linux help the most. Start with [CONTRIBUTING.md](CONTRIBUTING.md), then run the checks:
+Linux help the most. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+
+To try your local copy, run these from the repository root instead of the GitHub install:
+
+```bash
+claude plugin marketplace add .
+claude plugin install instinct@instinct
+```
+
+Then run the checks:
 
 ```bash
 # Validate skills after any change
