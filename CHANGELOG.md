@@ -14,6 +14,8 @@ The current package version is recorded in [.claude-plugin/plugin.json](.claude-
 - Surface experimental status and the limited external baseline in both languages.
 - Move scanner options, hashes and verified output examples to [docs/SCANNER.md](docs/SCANNER.md).
 - Add [contribution guidance](CONTRIBUTING.md) and a [security reporting policy](SECURITY.md).
+- Open both READMEs with the risk the plugin addresses, add a "How it works" section with the verdict
+  table, and show real abridged scanner findings from the inert `evil-plugin` fixture.
 
 ## 0.11.0
 
