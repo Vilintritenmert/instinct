@@ -1,0 +1,8 @@
+# Frozen input hashes must survive checkout on Windows, Linux and macOS.
+tests/how-deep-the-rabbit-hole-goes/corpus/** -text
+tests/how-deep-the-rabbit-hole-goes/external/** -text
+tests/how-deep-the-rabbit-hole-goes/context-review-v1/** -text
+tests/how-deep-the-rabbit-hole-goes/paraphrase-development/** -text
+tests/how-deep-the-rabbit-hole-goes/paraphrase-review-v1.json -text
+tests/how-deep-the-rabbit-hole-goes/paraphrase-development-v2/** -text
+tests/how-deep-the-rabbit-hole-goes/paraphrase-review-v2.json -text

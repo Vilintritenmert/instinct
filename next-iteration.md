@@ -1,12 +1,15 @@
 # Next iteration plan: how-deep-the-rabbit-hole-goes
 
-Status as of 2026-11-14: plugin package **0.8.0**, catalog **T01–T26**, JSON schema and tree-hash
-version **2**. The regression suite now defines **141 distinct checks**: the original 31 plus 64 positive,
-33 negative and 13 robustness checks (including two host-dependent link checks).
+Status as of 2026-11-15: plugin package **0.11.0**, catalog **T01–T26**, JSON schema and tree-hash
+version **2**, rule catalog version **1** (229 stable IDs; all 220 earlier IDs preserved). The regression
+suite defines **212 distinct checks**: 31 original, 105 positive, 60 negative and 16 robustness checks
+(including two host-dependent link checks). Measurement has 16 tests, review integrity 10 tests,
+and the original frozen corpus validator retains its 12 tests. Round 2 (0.11.0) is described in
+`tests/how-deep-the-rabbit-hole-goes/CONTEXT_REVIEW.md`.
 The aggregate subprocess-success assertion is not counted again.
 The skill, catalog, scanner output and helper scripts are in English.
 
-This document separates work completed in 0.7.0 and 0.8.0 from the remaining plan. A passing targeted regression
+This document separates work completed through 0.10.0 from the remaining plan. A passing targeted regression
 suite is not an estimate of detection rates on independent real-world skills.
 
 ## Step 1 — source checkpoint and reconciliation (complete, 2026-11-14)
@@ -49,7 +52,8 @@ The first development-only baseline was run after step 2: 140 successful scans, 
 minimum severity in 45/70 unsafe cases; 15/70 benign cases have MEDIUM+ review signals, of which the
 author identified seven contextual false alarms and eight justified review warnings. No frozen case,
 label or threshold was changed. The separate 0.8.0 development comparison follows the same policy.
-Stable rule IDs and external label review remain open (step 3). Do not treat every
+Stable rule IDs and reproducible measurement are implemented in 0.9.0; external label review remains
+open (step 3). Do not treat every
 generic capability warning as a malicious detection or every REVIEW on a benign integration as a false
 positive. Keep signal-level metrics, semantic verdicts and abstention/unchecked coverage separate.
 
@@ -70,6 +74,69 @@ positive. Keep signal-level metrics, semantic verdicts and abstention/unchecked 
 - Behavior rules and narrow context refinements are documented in `references/threats.md` and
   `references/coverage.md`. The schema/tree-hash contract stays at version 2. Results informed development;
   holdout evaluation, stable rule IDs, independent labels and agent-behavior tests remain open.
+
+## 0.9.0 measurement baseline (2026-11-14)
+
+- Explicit stable IDs: **154 pattern rules + 58 structural checks**. Findings and `-ListRules`
+  expose the same catalog fingerprint. Reordering leaves IDs/catalog/findings unchanged.
+- `tests/how-deep-the-rabbit-hole-goes/evaluate.py` produces one offline JSON/Markdown/CSV report,
+  with raw threshold alerts, expected topic/file matches, severity compliance, errors and unchecked
+  content. The fixed policy was recorded before examining external results.
+- Independent source: all **116 public test rows** from `deepset/prompt-injections`, revision
+  `4f61ecb038e9c3fb77e21034b22511b523772cdd`, retained with original labels (60 positive / 56 negative).
+  No scanner-result filtering or label edits. The pinned source and both upstream license declarations
+  are retained. This is externally sourced text-injection data, not independent review of full plugins.
+- At HIGH+: **TP 1, FN 59, FP 0, TN 56**, recall **1.7%**, observed precision **100% on one alert**.
+  MEDIUM+ gives the same counts. This exposes poor generalization beyond targeted development probes.
+  Some role-play/task requests lack original trust-boundary context; the dataset is not an all-threat
+  oracle and zero alerts on 56 negative examples does not establish a universal zero false-positive rate.
+- Development: expected topic/minimum **69/70**, annotated file **68/70**. Raw HIGH+ TP 53 / FN 17 /
+  FP 4 / TN 66; MEDIUM+ TP 70 / FN 0 / FP 9 / TN 61. Benign capability warnings are not confirmed
+  false UNSAFE verdicts. Four ZIP/PNG scans remain incomplete; all external static scans completed.
+- Both datasets lack exact severity labels. Exact/over-severity accuracy is **unassessed**; local
+  minimum severity compliance is 69/70. Independent severity/CWE/OWASP annotation remains open.
+- **256/256 final scans, zero process/input errors**. Before/after stable-ID comparison has **zero
+  finding or coverage changes**; all 154 detection definitions/severities/flags are unchanged.
+  An initial runner path-creation race was retained as a failed measurement, fixed and regression-tested.
+- **144/144 scanner regressions**, **14/14 measurement tests**, **12/12 corpus tests** pass on Windows /
+  PowerShell 7.6.9. `.gitattributes` and a clean temporary Git checkout test preserve frozen input bytes
+  with `core.autocrlf=true`. No current index changes or local holdout scoring were performed.
+
+Next: independently review external labels and trust-boundary context, add independent severity/topic
+annotations, then prioritize genuine paraphrase/semantic misses using a separate development source.
+Keep this measured external baseline frozen and do not tune against the local 60-case holdout.
+
+## 0.10.0 context review and separate development (2026-11-14)
+
+- Two isolated AI reviewers assessed every external text without upstream labels, scanner code or
+  outcomes. Official sources do not document original per-row trust placement or authorization.
+  Actual source context, semantic ground truth and exact severity remain unassessed for all 116 rows.
+- Types/severities are conditional on two explicit assumptions: direct authorized user versus
+  untrusted retrieved reference. Full agreement is 113/116 in each view; disagreements remain explicit.
+  Direct-user consensus is 103 benign / 4 unsafe / 6 ambiguous, plus 3 disputed. Reference-context
+  consensus is 64 benign / 49 unsafe, plus 3 disputed. No source label is replaced. These are AI reviews,
+  with shared-model bias possible; they are not independent human expert annotations.
+- A separate isolated agent authored and froze 60 development cases (30 pairs, 40 EN / 20 UK) without
+  seeing the scanner, any corpus or outcomes. Another agent reviewed explicit contexts/text blind to
+  proposed labels/expectations before the first scan; all 60 labels/types agreed. Core files stay frozen.
+- That source improved from **TP 1 / FN 29 / FP 0 / TN 30** to **TP 30 / FN 0 / FP 0 / TN 30**;
+  expected topic/minimum and annotated-file detections are 30/30. This is post-tuning development.
+- Eight new HIGH rules cover authority invalidation and protected-context requests; narrow context
+  guards handle prohibitions, rejected quotations, later callbacks and supplied-template editing.
+  Another agent's 27 unchanged own probes verified precision fixes without consulting corpora/outcomes.
+- Candidate SHA `098ddaf84cdcc8df1c8708cb68d989b7ac757f0b95eda4902db4fcabfd9ad994` was frozen before external
+  candidate results were read. All old 256-case findings/coverage are identical: development 69/70
+  expected topic, 68/70 annotated file; external **TP 1 / FN 59 / FP 0 / TN 56**. No external gain is
+  claimed. All original 59 misses remain in the ledger and denominator. HIGH/MEDIUM thresholds,
+  original upstream labels, the prior baseline and local 60-case holdout are unchanged.
+- 183 scanner regressions + 15 measurement + 10 review-integrity + 12 original corpus tests pass.
+  Source and case hashes, independent reviews, exact evidence, unresolved disagreements and all
+  intermediate outcomes are retained. New guides: `CONTEXT_REVIEW.md`; tools: `review_context.py`
+  and `evaluate.py --suite paraphrase`. The old `--suite all` remains exactly 256 cases.
+
+Next: obtain documented external system/user/tool traces and human topic/severity adjudication, and
+evaluate on novel untouched mechanisms. Preserve all old misses; training success on the new source
+does not establish independent generalization. The local holdout remains reserved for final acceptance.
 
 ## Completed in 0.7.0
 
@@ -112,11 +179,13 @@ behavior of the agent itself and not only the scanner, and close the gaps we alr
 Current verified limits:
 
 - Only Windows has confirmed test results; macOS and Linux remain unverified.
-- There is no independent corpus measurement or automated agent-behavior evaluation yet.
+- A narrow external baseline and two blind AI reviews are recorded; original source context is still
+  undocumented. Representative plugin traces, human label adjudication and agent-behavior evaluation
+  remain missing. Conditional AI labels are not recovered source truth.
 - Self-scanning security documentation and malicious fixtures produces expected signals. A scanner
   baseline/difference feature for separating known signals from new ones is not implemented.
 - The reporting workflow has not been independently evaluated on representative third-party audits.
-- Git still warns about LF being replaced with CRLF; there is no `.gitattributes` file.
+- Frozen corpora are protected by `.gitattributes`; non-corpus files can still produce LF/CRLF warnings.
 
 Historical observations retained from the 0.6.0 plan: approximately 8 seconds for a 29-file self-scan,
 and 65 CRITICAL / 128 HIGH signals on that earlier tree. These figures were not remeasured for 0.7.0
@@ -124,9 +193,14 @@ and are not current performance or quality baselines.
 
 Known coverage gaps (from the scanner code and a multilingual check):
 
-- Prose rules target English and Ukrainian. Other languages and mixed-language paraphrases lack
-  measured coverage; language-independent code signals can still match. Foreign-language prohibitions
-  can cause false alarms and need dedicated positive/negative controls.
+- Prose rules target English and Ukrainian; since 0.11.0 German is covered for T01 hijacking and T06
+  disclosure only. Other languages and mixed-language paraphrases lack measured coverage;
+  language-independent code signals can still match. Foreign-language prohibitions can cause false
+  alarms and need dedicated positive/negative controls.
+- Two rounds of separately authored development sources (0.10.0, 0.11.0) moved their own metrics to
+  30/30 and 38/40, but neither changed the external result: all 59 original deepset misses remain.
+  The development sources are skill-file shaped; the external rows are short chat prompts. A next round
+  needs held-out data of the same shape as the target, not more tuning on author-written fixtures.
 - The specific Ukrainian infinitive and possessive gaps (`вставити … токен`, `у свою пам'ять`)
   are fixed and tested in 0.7.0; broader grammar and paraphrases still need independent evaluation.
 - The "data, not instructions" guard and the "reads external content" signal are recognized only in
@@ -159,8 +233,9 @@ Known coverage gaps (from the scanner code and a multilingual check):
 - **Done when:** the independent baseline reports TP/FN/FP, severity accuracy and unchecked content
   by threat category. Record the unit of evaluation; do not mix per-rule signals and whole-target
   safety verdicts. Set a numerical improvement target only after the first independent measurement.
-- **Status:** corpus v1 is frozen and integrity-checked; the author-run development baseline and 0.8.0
-  comparison are complete. External label review and independent evaluation remain pending. The holdout has not been scored.
+- **Status:** author-written development and externally sourced deepset public-test baselines are
+  recorded. External label/severity adjudication and representative real-skill evaluation remain open.
+  The local holdout has not been scored. See the 0.9.0 baseline above.
 
 ### 1.2. Evaluating the agent's behavior with the skill
 - **What:** a set of scenarios where the agent with this skill checks a target and the result is
@@ -246,13 +321,16 @@ Known coverage gaps (from the scanner code and a multilingual check):
   the target cannot whitewash itself.
 - **Done when:** rescanning an unchanged target with a baseline shows zero new findings.
 
-### 3.2. Stable rule identifiers
+### 3.2. Stable rule identifiers — implemented in 0.9.0
 - **What:** give each rule a code like `T05-03` and move the rules out of the script body into a separate
   data file.
 - **Why:** a code can be referenced in the report, in the baseline and in tests; a file with 130 rules
   inside the script is already hard to review.
 - **Done when:** every rule has at least one positive and one negative example in the tests.
-- **Dependency:** easier to do before 3.1.
+- **Status:** all 212 checks now have explicit IDs, catalog export/fingerprint and regression checks.
+  Pattern definitions remain beside their scanner logic; structural metadata is external JSON.
+  Full positive/negative coverage for each individual rule remains open; current rule hits are not
+  a substitute. The update-comparison feature (3.1) remains separate work.
 
 ### 3.3. A log of audited skills
 - **What:** save the report and the scanner JSON to a file named after the skill and the tree hash; at the
@@ -292,8 +370,9 @@ Known coverage gaps (from the scanner code and a multilingual check):
 
 1. **Complete:** save the 0.7.0 source/evidence checkpoint and reconcile this document (step 1).
 2. **Prepared:** corpus v1 (1.1), 100 scenario/control families and a 30% holdout; external review is pending.
-3. **Baseline recorded:** development-only measurements and author triage are retained. Stable rule IDs
-   (3.2) and external review remain open; the corpus is not independently authored or blind to its author.
+3. **Implemented in 0.9.0:** stable IDs and unified measurement; independently sourced public-test
+   baseline recorded. Independent adjudication/representative scope remain open; the local author-written
+   corpus is not independent or blind to its author.
 4. **Implemented in 0.8.0:** behavior-specific rules and narrow contextual precision fixes, with 62 new
    positive, negative and match-limit checks. See the threat catalog additions and development comparison.
    Hidden formats, broader data-flow/configuration parsing and language coverage remain future work.

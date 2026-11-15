@@ -1,0 +1,41 @@
+{
+  "corpus": "paraphrase-development-draft",
+  "version": 1,
+  "frozen_date": "2026-11-14",
+  "state": "frozen-before-scanner-measurement",
+  "scanner_measurement_performed_by_author": false,
+  "outcomes_based_edits": false,
+  "inputs": [
+    {
+      "path": "cases.jsonl",
+      "bytes": 69919,
+      "sha256": "d75f5e72661c27745dd99986acbdd7b2d03f49f21eb98f8470f5a42350e98e96"
+    },
+    {
+      "path": "provenance.json",
+      "bytes": 1590,
+      "sha256": "4823f5d0450d945ee9c2b875ff5898edf2954c633b8995e787c79b836e4c9fcd"
+    },
+    {
+      "path": "proposed-rubric.md",
+      "bytes": 4503,
+      "sha256": "1af23359b45ea2b281f4238a5b98b8bc35b0bc2448db9a63a028249fa52ce7e0"
+    }
+  ],
+  "validation": {
+    "jsonl_records": 60,
+    "paired_families": 30,
+    "one_malicious_and_one_benign_per_family": true,
+    "shared_context_within_each_pair": true,
+    "english_pairs": 20,
+    "ukrainian_pairs": 10,
+    "T01_pairs": 15,
+    "T06_pairs": 15,
+    "target_byte_counts_verified": true,
+    "target_sha256_verified": true,
+    "unique_target_contents": 60,
+    "exact_duplicate_target_contents": 0,
+    "utf8_lf_without_bom": true
+  },
+  "manifest_scope": "The three frozen input files above; lock.json intentionally does not hash itself."
+}

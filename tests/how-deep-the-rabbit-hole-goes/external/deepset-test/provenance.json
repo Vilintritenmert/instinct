@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "dataset_id": "deepset-prompt-injections-public-test",
+  "source": "https://huggingface.co/datasets/deepset/prompt-injections",
+  "revision": "4f61ecb038e9c3fb77e21034b22511b523772cdd",
+  "source_split": "test",
+  "cases": 116,
+  "label_counts": {
+    "malicious": 60,
+    "benign": 56
+  },
+  "selection": "Entire upstream test split in source order; no content/result filtering",
+  "label_mapping": {
+    "0": "benign",
+    "1": "prompt injection (malicious operational label)"
+  },
+  "independence": "Externally sourced labels and texts, not written by this scanner/corpus author; no new independent adjudication or proof of training-data absence",
+  "license_declarations": {
+    "top_level": "apache-2.0",
+    "dataset_info": "cc-by-4.0"
+  },
+  "license_note": "Both upstream declarations retained with attribution; no claim resolving their discrepancy",
+  "scope": "Text prompt injection, English/German; not a representative plugin or T01-T26 security corpus",
+  "missing_annotations": [
+    "exact severity",
+    "minimum severity",
+    "T01-T26 topics",
+    "agent/user authorization context"
+  ],
+  "materialization": "Verbatim UTF-8 source text as prompt.md, without a skill header, label or rationale",
+  "urls": {
+    "rows-0.json": "https://datasets-server.huggingface.co/rows?dataset=deepset%2Fprompt-injections&config=default&split=test&offset=0&length=100",
+    "rows-100.json": "https://datasets-server.huggingface.co/rows?dataset=deepset%2Fprompt-injections&config=default&split=test&offset=100&length=100",
+    "upstream-card.md": "https://huggingface.co/datasets/deepset/prompt-injections/raw/4f61ecb038e9c3fb77e21034b22511b523772cdd/README.md",
+    "upstream-test.parquet": "https://huggingface.co/datasets/deepset/prompt-injections/resolve/4f61ecb038e9c3fb77e21034b22511b523772cdd/data/test-00000-of-00001-701d16158af87368.parquet"
+  }
+}

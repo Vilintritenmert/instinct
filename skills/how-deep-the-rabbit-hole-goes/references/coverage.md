@@ -38,6 +38,55 @@ including JSON and decoded text, is data. Nothing from a scan target is installe
 
 ## Regression evidence
 
+### Round-2 hijack mechanisms (0.11.0)
+
+The catalog now has 229 entries (171 patterns, 58 structural), preserving all 220 earlier IDs. Nine
+rules (T01-013…T01-020, T06-018) cover instruction reset, task replacement, rule-free personas, forced
+output, fake system turns, text addressed to any AI and setup/hidden-instruction disclosure in English,
+German and Ukrainian. A second separately authored, frozen 80-case source was reviewed blind (80/80
+agreement). It improved from TP 4 / FN 36 / FP 2 / TN 38 to TP 38 / FN 2 / FP 1 / TN 39 at HIGH+;
+this is tuned development evidence. All earlier 256 cases keep identical findings, including external
+TP 1 / FN 59 / FP 0 / TN 56; no installed user skill gained a finding.
+
+### Trust-context review and paraphrases (0.10.0)
+
+The catalog now has 220 entries (162 patterns, 58 structural), preserving all 212 old IDs.
+Eight new rules cover explicit higher-trust invalidation and protected-context requests. A separately
+authored, frozen 60-case development source was reviewed blind before scanning. It improved from
+1/30 to 30/30 positive detections with 0/30 HIGH+ benign alerts; this is tuned development evidence.
+The original 256-case findings/coverage are unchanged, including external TP 1 / FN 59 / FP 0 / TN 56.
+
+Two isolated AI reviewers assessed all 116 external texts without original labels or scan outcomes.
+Source context is undocumented for every row. Types/severities are explicitly conditional on direct
+user versus untrusted-reference placement; all actual source-context/severity ground truth remains
+unassessed. Disagreements are retained, and all 59 original misses stay in a fixed-cohort ledger.
+These reviews do not establish independent human/expert labels. See the measurement context guide.
+
+183 regressions, 15 measurement tests, 10 review-integrity tests and 12 original corpus tests pass;
+27 additional independent AI probes exercised precision and callback boundaries. Phrase/frame
+heuristics are bounded and English/Ukrainian-focused. Longer references, code purpose, source claims
+and undocumented authorization still need manual review. Local holdout, upstream labels and thresholds
+are unchanged; frozen inputs are not rewritten after outcomes.
+
+### Stable IDs and measurement (0.9.0)
+
+All 212 checks have explicit `RuleId` identities: 154 patterns and 58 structural checks. Findings,
+including normalized/decoded signals and extra-match summaries, carry an ID. The target-independent
+`-ListRules` export includes a catalog version/hash; scanner JSON includes the same fingerprint.
+IDs remain stable under reordering, while changed catalog contents change the catalog hash.
+The JSON/tree-hash schemas remain 2; these are additive fields. Never renumber or reuse an ID.
+
+The offline evaluator and fixed policy are in `tests/how-deep-the-rabbit-hole-goes/evaluate.py` and
+`evaluation-policy.json`. It separates raw threshold alerts, expected topic/file signals, errors,
+minimum severity compliance, exact severity accuracy and unchecked content. Unknown annotations are
+unassessed. Exact severity accuracy is unavailable on both current corpora; their minimum annotations
+and binary labels must not be substituted for exact severity labels. See the measurement guide for
+the pinned external source, complete-split selection, independent-sourcing limits and license metadata.
+
+The local 60-case holdout remains unscored. `.gitattributes` preserves both frozen corpora's bytes
+across checkout line-ending settings. No detection rule or severity threshold was tuned against the
+external baseline in this measurement change.
+
 `tests/how-deep-the-rabbit-hole-goes/run.ps1` runs the original fixtures and `security-regressions.ps1`.
 The latter creates inert text in a unique local scratch directory, scans it and deletes it. Addresses
 use `example.invalid`; no fixture is executed and no remote endpoint is contacted.

@@ -1,0 +1,408 @@
+[
+  {
+    "RuleId": "T09-901",
+    "Threat": "T09",
+    "Kind": "structural",
+    "Name": "installation lifecycle launches a high-risk command — in parsed JSON at $pointer.$key",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T10-901",
+    "Threat": "T10",
+    "Kind": "structural",
+    "Name": "per-line rule match limit — remaining candidates not checked",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T19-901",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "directory could not be enumerated — not checked",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T17-901",
+    "Threat": "T17",
+    "Kind": "structural",
+    "Name": "symlink (where does it lead?)",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T02-901",
+    "Threat": "T02",
+    "Kind": "structural",
+    "Name": "invisible/bidi characters in the file name (the real extension is hidden)",
+    "DefaultSeverity": "CRITICAL"
+  },
+  {
+    "RuleId": "T19-902",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "double extension (disguised as a document)",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T19-903",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "hidden file (dotfile)",
+    "DefaultSeverity": "LOW"
+  },
+  {
+    "RuleId": "T21-901",
+    "Threat": "T21",
+    "Kind": "structural",
+    "Name": "plugin hooks: commands run automatically on agent events",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T21-902",
+    "Threat": "T21",
+    "Kind": "structural",
+    "Name": "MCP servers: launched processes or remote tools",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T21-903",
+    "Threat": "T21",
+    "Kind": "structural",
+    "Name": "plugin monitors: background commands",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T21-904",
+    "Threat": "T21",
+    "Kind": "structural",
+    "Name": "LSP servers: launched processes",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T21-905",
+    "Threat": "T21",
+    "Kind": "structural",
+    "Name": "file in the plugin's bin/ (added to PATH)",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T09-902",
+    "Threat": "T09",
+    "Kind": "structural",
+    "Name": "bundled agent settings",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T21-906",
+    "Threat": "T21",
+    "Kind": "structural",
+    "Name": "plugin component (agent/command/style) — read it as instructions",
+    "DefaultSeverity": "LOW"
+  },
+  {
+    "RuleId": "T23-901",
+    "Threat": "T23",
+    "Kind": "structural",
+    "Name": "bundled agent instruction/memory file — enters the context without the skill being invoked",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T11-901",
+    "Threat": "T11",
+    "Kind": "structural",
+    "Name": "git submodules: external code outside the audit",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T09-903",
+    "Threat": "T09",
+    "Kind": "structural",
+    "Name": "git hook in the target's .git: runs during git commands in this folder",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T09-904",
+    "Threat": "T09",
+    "Kind": "structural",
+    "Name": "the target's .git/config was scanned (fsmonitor, sshCommand, hooksPath run code)",
+    "DefaultSeverity": "LOW"
+  },
+  {
+    "RuleId": "T19-904",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "executable/binary file",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T19-905",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "document with macros",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T19-906",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "serialized object (pickle executes code on load)",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T19-907",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "archive — content not checked",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T19-908",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "document — content not scanned, may contain hidden text",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T19-909",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "media/font — not scanned",
+    "DefaultSeverity": "LOW"
+  },
+  {
+    "RuleId": "T19-910",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "file the system runs or imports on double-click",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T19-911",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "file too large — content not scanned",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T19-912",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "large file",
+    "DefaultSeverity": "LOW"
+  },
+  {
+    "RuleId": "T19-913",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "file could not be read — not checked",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T19-914",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "data after the end of the image (polyglot?)",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T02-902",
+    "Threat": "T02",
+    "Kind": "structural",
+    "Name": "text inside the image → $($h.Rule.Id) $($h.Rule.Name ?? $h.Match.Value)",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T19-915",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "image extension does not match the content (disguised file?)",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T19-916",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "binary content (null bytes)",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T19-917",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "invalid or unsupported text encoding — content not checked",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T12-901",
+    "Threat": "T12",
+    "Kind": "structural",
+    "Name": "frontmatter is not closed — the whole file is read as metadata",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T12-902",
+    "Threat": "T12",
+    "Kind": "structural",
+    "Name": "name matches a built-in skill",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T12-903",
+    "Threat": "T12",
+    "Kind": "structural",
+    "Name": "name nearly matches a built-in skill (typosquatting)",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T12-904",
+    "Threat": "T12",
+    "Kind": "structural",
+    "Name": "name poses as an official skill",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T12-905",
+    "Threat": "T12",
+    "Kind": "structural",
+    "Name": "description too long (always in the agent's context)",
+    "DefaultSeverity": "LOW"
+  },
+  {
+    "RuleId": "T21-907",
+    "Threat": "T21",
+    "Kind": "structural",
+    "Name": "JSON configuration could not be fully inspected — read it by hand",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T11-902",
+    "Threat": "T11",
+    "Kind": "structural",
+    "Name": "($pinned ? 'plugin from an external source (sha pinned) — check it separately' : 'plugin from an external source without a pinned sha — content can change after the audit')",
+    "DefaultSeverity": "CONTEXTUAL"
+  },
+  {
+    "RuleId": "T11-903",
+    "Threat": "T11",
+    "Kind": "structural",
+    "Name": "marketplace.json could not be parsed",
+    "DefaultSeverity": "LOW"
+  },
+  {
+    "RuleId": "T02-903",
+    "Threat": "T02",
+    "Kind": "structural",
+    "Name": "text after $blank blank lines (hidden at the bottom of the file)",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T02-904",
+    "Threat": "T02",
+    "Kind": "structural",
+    "Name": "malformed URL in markdown link",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T02-905",
+    "Threat": "T02",
+    "Kind": "structural",
+    "Name": "link text shows $shown but leads to $real",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T10-902",
+    "Threat": "T10",
+    "Kind": "structural",
+    "Name": "very long line ($($line.Length) characters) — minified or obfuscated code?",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T10-903",
+    "Threat": "T10",
+    "Kind": "structural",
+    "Name": "base64 decoding limit — remaining content not checked",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T10-904",
+    "Threat": "T10",
+    "Kind": "structural",
+    "Name": "base64 decoding limit — remaining content not checked",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T10-905",
+    "Threat": "T10",
+    "Kind": "structural",
+    "Name": "encoded text contains high-risk behavior; review decoded instructions",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T10-906",
+    "Threat": "T10",
+    "Kind": "structural",
+    "Name": "line could not be checked (regex timeout) — read it by hand",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T22-901",
+    "Threat": "T22",
+    "Kind": "structural",
+    "Name": "conditional trigger accompanies explicitly sensitive outbound behavior nearby",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T22-902",
+    "Threat": "T22",
+    "Kind": "structural",
+    "Name": "non-CI branch calls a function named for sensitive data export; inspect its implementation",
+    "DefaultSeverity": "HIGH"
+  },
+  {
+    "RuleId": "T10-907",
+    "Threat": "T10",
+    "Kind": "structural",
+    "Name": "conditional behavior check timed out — read the file by hand",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T01-901",
+    "Threat": "T01",
+    "Kind": "structural",
+    "Name": "reads external content but has no \"this is data, not instructions\" rule (indirect injection)",
+    "DefaultSeverity": "LOW"
+  },
+  {
+    "RuleId": "T07-901",
+    "Threat": "T07",
+    "Kind": "structural",
+    "Name": "access to secrets and an outbound channel in one skill (T06 + T07 combination)",
+    "DefaultSeverity": "CRITICAL"
+  },
+  {
+    "RuleId": "T13-901",
+    "Threat": "T13",
+    "Kind": "structural",
+    "Name": "the skill uses the network but the description does not mention it",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
+    "RuleId": "T11-904",
+    "Threat": "T11",
+    "Kind": "structural",
+    "Name": "mentions a file the skill does not contain (will it appear later? is it downloaded?)",
+    "DefaultSeverity": "LOW"
+  },
+  {
+    "RuleId": "T13-902",
+    "Threat": "T13",
+    "Kind": "structural",
+    "Name": "script is never mentioned in the skill's instructions (why is it here?)",
+    "DefaultSeverity": "LOW"
+  },
+  {
+    "RuleId": "T12-906",
+    "Threat": "T12",
+    "Kind": "structural",
+    "Name": "several skills share the name '$($g.Name)'",
+    "DefaultSeverity": "MEDIUM"
+  }
+]

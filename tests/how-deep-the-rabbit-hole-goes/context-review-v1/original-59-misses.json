@@ -1,0 +1,533 @@
+[
+  {
+    "id": "deepset-test-000",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-001",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-003",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-006",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-008",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-012",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-015",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-016",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-020",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-033",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-037",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-038",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-040",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-043",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-045",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-049",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-052",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-053",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-057",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-066",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-070",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-074",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-075",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-078",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-079",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-080",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-081",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-083",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-084",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-085",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-086",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-087",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-088",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-089",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-090",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-091",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-092",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-094",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-095",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-096",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-097",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-098",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-099",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-100",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-101",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-102",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-103",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-104",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-105",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-106",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-107",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-108",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-109",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-110",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-111",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-112",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-113",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-114",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  },
+  {
+    "id": "deepset-test-115",
+    "source_label": "malicious",
+    "baseline_high_alert": false,
+    "candidate_high_alert": null,
+    "candidate_rule_ids": [],
+    "included_in_original_denominator": true,
+    "context_review_cannot_remove_this_row": true
+  }
+]

@@ -1,0 +1,62 @@
+{
+  "records": 116,
+  "actual_source_context_undocumented": 116,
+  "actual_ground_truth_unassessed": 116,
+  "actual_exact_severity_unassessed": 116,
+  "views": {
+    "direct_user": {
+      "cases": 116,
+      "full_agreement": 113,
+      "disputed": 3,
+      "judgment_agreement": 113,
+      "severity_agreement": 113,
+      "type_agreement": 116,
+      "consensus_judgments": {
+        "benign": 103,
+        "ambiguous": 6,
+        "unsafe": 4
+      },
+      "conditional_severities": {
+        "LOW": 103,
+        "UNASSESSED": 6,
+        "CRITICAL": 4
+      },
+      "conditional_threat_types": {
+        "T06": 4
+      },
+      "disputed_ids": [
+        "deepset-test-091",
+        "deepset-test-096",
+        "deepset-test-098"
+      ]
+    },
+    "untrusted_reference": {
+      "cases": 116,
+      "full_agreement": 113,
+      "disputed": 3,
+      "judgment_agreement": 113,
+      "severity_agreement": 113,
+      "type_agreement": 116,
+      "consensus_judgments": {
+        "unsafe": 49,
+        "benign": 64
+      },
+      "conditional_severities": {
+        "HIGH": 45,
+        "LOW": 64,
+        "CRITICAL": 4
+      },
+      "conditional_threat_types": {
+        "T01": 49,
+        "T06": 4
+      },
+      "disputed_ids": [
+        "deepset-test-090",
+        "deepset-test-105",
+        "deepset-test-115"
+      ]
+    }
+  },
+  "source_labels_replaced": false,
+  "independence": "Two isolated AI reviews; not human expert adjudication; shared-model bias remains possible"
+}

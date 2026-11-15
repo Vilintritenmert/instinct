@@ -9,7 +9,8 @@ plugins that you run *before* you install or use someone else's.
 
 > [!NOTE]
 > The skill, the threat catalog and the scanner's output are in English; the agent writes its report in
-> the user's language. The scanner's detection rules cover English and Ukrainian text.
+> the user's language. The scanner's detection rules cover English and Ukrainian text, plus German for
+> instruction hijacking and prompt disclosure.
 
 ## Why
 
@@ -123,7 +124,8 @@ Beyond line-by-line pattern matching, the scanner:
   polite language are only caught by reading them.
 - Text drawn into the pixels of an image is not analyzed. Binaries, archives and office documents are
   flagged but not opened.
-- Text-based rules are written for English and Ukrainian. Instructions in other languages, and scripts
+- Text-based rules are written for English and Ukrainian; German is covered only for instruction
+  hijacking and prompt disclosure (T01/T06). Instructions in other languages, and scripts
   in languages other than Python, JavaScript/TypeScript, PowerShell and shell, are mostly invisible to
   the scanner; the skill tells the agent to read such targets in full by hand.
 - A verdict applies only to the audited version. Re-audit after every update.
@@ -188,11 +190,34 @@ Conventions:
 
 ## Reporting a problem
 
+Version 0.10.0 retains that fixed benchmark and adds a
+[trust-context review and separate paraphrase source](tests/how-deep-the-rabbit-hole-goes/CONTEXT_REVIEW.md).
+Two blind AI reviews add conditional types/severities without changing upstream labels. Eight new
+rules improve the separate development source from 1/30 to 30/30 positives, with no HIGH+ alert on
+its 30 controls. The original external result remains 1/60; all 59 original misses are retained.
+Version 0.11.0 adds a second blind-authored, blind-reviewed development source (80 cases in English,
+German and Ukrainian) and nine mechanism-level rules: it improves from 4/40 to 38/40 positives with
+1/40 HIGH+ control alerts. All earlier development and external findings are identical case by case,
+so the external result is still 1/60 with all 59 original misses retained.
+The catalog has 229 stable IDs. Context-sensitive severity and real-world accuracy still need review.
+
 The regression runner also generates safe synthetic probes for evasions, negative controls and scanner
 robustness. Fixtures are read, never executed. Link probes explicitly skip if the host prevents creating
 links; verify them on a capable host. Save per-case measurements with
 `security-regressions.ps1 -ReportPath <file>`; use `-MeasureOnly -Scanner <old scan.ps1>` for a baseline.
 These focused regression metrics are not real-world precision or recall estimates.
+
+Version 0.9.0 adds stable IDs for all 212 scanner checks and an offline evaluation command:
+
+```powershell
+python -B tests/how-deep-the-rabbit-hole-goes/evaluate.py --output work/evaluation
+```
+
+It produces one report for the frozen development set and the independently sourced deepset public
+test split: raw alert TP/FN/FP/TN, expected-topic/file matches, minimum versus exact severity,
+unchecked content and per-rule evidence. The local 60-case holdout is not scored. The external labels
+cover text injection and lack severity annotations; their limits and provenance are described in the
+[measurement guide](tests/how-deep-the-rabbit-hole-goes/EVALUATION.md).
 
 If the scanner misses an attack pattern or raises a false alarm, open an issue with a minimal sample.
 Keep samples inert: use `example.invalid` and never include real credentials or working payloads.

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "revision": "4f61ecb038e9c3fb77e21034b22511b523772cdd",
+  "files": [
+    {
+      "path": "cases.jsonl",
+      "bytes": 53858,
+      "sha256": "08e30a583dc34d4ad198da05cdbcb20f9ba6a59a0cd2f5dc6c60795f3cbedfb5"
+    },
+    {
+      "path": "provenance.json",
+      "bytes": 1887,
+      "sha256": "efb5bb7d1ee222af83feb5b6c5eebb0248f5dfb60438966a3c3c2af69746562c"
+    },
+    {
+      "path": "rows-0.json",
+      "bytes": 18237,
+      "sha256": "4bccf0295aeb2bb762acb0e551e6b8770e46b59a79347a7152ebfc42e5c843fa"
+    },
+    {
+      "path": "rows-100.json",
+      "bytes": 4304,
+      "sha256": "ef5747b60c19390efcece1ff43a24211e6e438c995b01fe0b5f8a7a68c434531"
+    },
+    {
+      "path": "upstream-card.md",
+      "bytes": 500,
+      "sha256": "d90b4518dfe06154deeec938243d1ec9119bdfbfd2105aee9cf1567999764b94"
+    },
+    {
+      "path": "upstream-test.parquet",
+      "bytes": 10892,
+      "sha256": "39ac797cabc157eeed58435a08593b2952bb6cb16fc394a2d383f447cc7b246e"
+    }
+  ]
+}

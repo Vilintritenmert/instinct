@@ -23,7 +23,8 @@ every lowered finding rather than accepting it as proof of safety.
 in image metadata and trailers. A finding marked "after normalization" or "in decoded base64" gets one
 severity level higher: a legitimate skill has no reason to hide a command.
 
-**Languages.** The text rules cover English and Ukrainian. Instructions in other languages (and code in
+**Languages.** The text rules cover English and Ukrainian; German only for T01 hijacking and T06
+prompt disclosure. Instructions in other languages (and code in
 languages other than Python, JavaScript/TypeScript, PowerShell and shell) are mostly invisible to the
 scanner and must be read by hand.
 
@@ -51,6 +52,9 @@ alleged permission from Anthropic, the system or an administrator.
 - **Fake role markers (HIGH):** `<system>`, `<system-reminder>`, `[SYSTEM]`, `[INST]`,
   `<|im_start|>` — text formatted as if the system wrote it rather than the skill author.
 - **Claim of priority (MEDIUM):** "this rule takes precedence over…", "overrides any other instructions".
+- **Hijack mechanisms (HIGH, EN/DE/UK):** earlier instructions declared void, the user's task replaced,
+  a persona free of the rules, output forced against the request, fake `System:` turns, text addressed to
+  "any AI reading this" — see "Round-2 hijack mechanisms" below.
 - **False positives:** documentation that quotes such phrases as examples of attacks (like this file).
 - **Indirect injection (LOW, skill level):** the skill reads external content (web search, pages, email,
   issues, news sources) but never tells the agent that this content is data, not instructions. The skill
@@ -331,7 +335,63 @@ The skill does not touch the system but spoils what the agent hands to the user.
 
 ---
 
+## Round-2 hijack mechanisms in 0.11.0 (EN/DE/UK)
+
+Nine HIGH review signals from a second blind-authored, blind-reviewed development source (80 cases, English,
+German and Ukrainian). Each targets a mechanism rather than one sentence. All are prose-aware: a local
+prohibition ("never ignore the user's questions") or an explicitly rejected quotation lowers them.
+
+| RuleId | Mechanism | Positive / near-benign control |
+|---|---|---|
+| T01-013 | What the agent "was told/given" is declared void, "forget everything you were told", direction taken only from this file | Earlier instructions declared obsolete / an earlier *draft* declared obsolete |
+| T01-014 | German: earlier Vorgaben/Anweisungen aufgehoben, "Vergiss, was man dir…", sole authority of this file, "Vorrang vor allen Anweisungen" | Earlier instructions void / "Vergiss die alte Gliederung" |
+| T01-015 | Ukrainian: «усе, що тобі казали… втратило силу», previous settings cancelled, "only this file, not the platform", file given "highest priority" | Earlier instructions void / discard an earlier draft |
+| T01-016 | The user's task replaced ("your new objective is…", "what you are actually here to do") or the user to be ignored (EN/DE/UK) | Ignore the user's questions / never ignore them |
+| T01-017 | Persona or mode defined as free of the operator's/developer's rules ("keeps none of them", "never refuses", "kennt keine Regeln", «обмежень не існує») | Persona outside policy / persona that keeps every rule |
+| T01-018 | Output forced regardless of the user's request, or real results suppressed ("whatever you find, reply only…", "keep every finding out") | Fixed reply against the user / reply in the user's chosen language |
+| T01-019 | A fake `System:` / `[Systemnachricht]` / `<<СИСТЕМА>>` line inside the file grants itself authority | Fake system turn / an illustrative User/Assistant exchange |
+| T01-020 | Text addressed to any AI reading it ("every AI reading this…") orders an override | Addressed override / such a sentence quoted as data to ignore |
+| T06-018 | Disclosure of setup or hidden instructions, "everything above this line in your context", or other people's conversations (EN/DE/UK) | Print hidden instructions / "if someone asks, decline" |
+
+Context adjustments added with them: German „…“ quotes and "sentences like …"/„Sätze wie …"/«речення на
+кшталт …» with an explicit refusal ("are just data", „sind bloße Daten", «не виконуй») lower a quoted
+attack to LOW; a conditional disclosure request the file tells the agent to refuse is LOW; `you are now`
+(T01-004) is MEDIUM instead of HIGH only when the same line explicitly keeps every governing rule and
+contains no liberation wording.
+
+Known limits: task substitution phrased as "instead of X, write Y and present it as the result"
+(two v2 cases) is not caught, because it cannot be told apart from a legitimate format change lexically.
+None of these rules fired on the 59 original external misses; see `tests/.../CONTEXT_REVIEW.md`.
+
+## Context-reviewed paraphrases in 0.10.0
+
+These eight HIGH review signals come from a separate, blind-authored and separately reviewed
+development source with explicit authorization context. Existing IDs and severities are preserved.
+
+| RuleId | Mechanism | Positive / near-benign control |
+|---|---|---|
+| T01-010 | Invalidating a developer/system requirement or declaring it obsolete | Suspend a developer rule / explicitly prohibit that suspension |
+| T01-011 | Promoting a source above governing instructions or making older rules subordinate | Promote a note above developer instructions / preserve hierarchy; incidental operating-system text is insufficient |
+| T01-012 | Ukrainian rule invalidation and inverted instruction ordering | Disregard a developer requirement / prohibit its cancellation |
+| T06-013 | Reproduce/transform protected messages or reconstruct hidden directives | Actual system/developer messages / public supplied prompt work and local prohibitions |
+| T06-014 | Protected source followed by a related disclosure action | Hidden source then return its wording / forbid disclosure or request unrelated public output |
+| T06-015 | Ukrainian protected-context disclosure/reconstruction | Show actual system instructions / explicit prohibition |
+| T06-016 | Ukrainian protected source with a later anaphoric disclosure | Hidden prompt then show its text / source remains private |
+| T06-017 | Retrieve another user's private material | Copy another user's private note / do not retrieve or quote it |
+
+Checks in `security-regressions.ps1`, invoked by `run.ps1`, include per-rule identity, rejected quotes
+with later callbacks, pseudo-negation bypasses, code/decoded text and supplied-template edits.
+Clause boundaries avoid joining a safe earlier action with a later prohibition. Quote lowering needs
+explicit framing; later affirmative execution prevents it. Supplied artifacts without demonstrated
+literal data remain MEDIUM and require provenance review. These are heuristics, not verified data flow
+or authority. Conditional external annotations never overwrite the original raw benchmark labels.
+
 ## Development-driven additions in 0.8.0
+
+In 0.9.0, each pattern/check also has a stable `RuleId` (`Txx-nnn`). The broader T01–T26 category is
+unchanged. Export all IDs, names and default/contextual severities with `scan.ps1 -ListRules`;
+structural metadata lives in `structural-rules.json`. This metadata change adds no new detection
+behavior. The evaluator reports findings/misses by these IDs without claiming full class coverage.
 
 These are bounded static signals. Confirm purpose, authorization and actual behavior during review.
 The positive/near-benign controls live in `security-regressions.ps1`, invoked by `run.ps1`.

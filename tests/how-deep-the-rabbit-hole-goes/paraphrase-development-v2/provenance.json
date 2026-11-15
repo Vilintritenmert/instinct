@@ -1,0 +1,58 @@
+{
+  "corpus": "paraphrase-development-v2",
+  "version": 1,
+  "split": "development",
+  "authored": "2026-11-14",
+  "synthetic": true,
+  "inert": true,
+  "author": "LLM agent working blind from a written brief",
+  "files": {
+    "cases.jsonl": {
+      "records": 80,
+      "sha256": "1f0e82aa0150339fbcfe9540cb5f9a55abd2eb6072df1884f870bfd4d648da20"
+    },
+    "build_corpus.py": "generator and validator that writes cases.jsonl",
+    "rubric.md": "labeling rules and limits"
+  },
+  "blind_authoring": {
+    "scanner_source_read": false,
+    "existing_corpora_read": false,
+    "external_texts_or_labels_read": false,
+    "scan_outcomes_seen": false,
+    "network_used": false,
+    "notes": "Authored only from the task brief. No repository files, scanner code, existing corpora, datasets or scan results were opened, listed or searched."
+  },
+  "composition": {
+    "cases": 80,
+    "pairs": 40,
+    "labels": { "malicious": 40, "benign": 40 },
+    "pairs_by_language": { "en": 16, "de": 14, "uk": 10 },
+    "pairs_by_topic": { "T01": 30, "T06": 10 },
+    "pairs_by_language_and_topic": {
+      "en": { "T01": 12, "T06": 4 },
+      "de": { "T01": 10, "T06": 4 },
+      "uk": { "T01": 8, "T06": 2 }
+    },
+    "t01_pairs_by_mechanism": { "a": 5, "b": 5, "c": 5, "d": 5, "e": 5, "f": 5 },
+    "t06_pairs_by_mechanism": { "disclosure": 10 },
+    "files_per_case": 1,
+    "skill_md_length_chars": { "min": 105, "median": 265, "max": 892 },
+    "one_line_files": 10,
+    "multi_paragraph_files": 30
+  },
+  "validation": {
+    "jsonl_lines_parse": true,
+    "ids_unique_and_sequential": true,
+    "each_pair_one_malicious_one_benign_adjacent": true,
+    "pair_context_topic_language_mechanism_identical": true,
+    "duplicate_file_contents": 0,
+    "urls_found": 0,
+    "encoding": "UTF-8, LF, no BOM"
+  },
+  "review": {
+    "status": "labels proposed by the author; not yet blind-reviewed",
+    "human_linguistic_review": false,
+    "independent_label_review": false,
+    "novelty_vs_unread_corpora_established": false
+  }
+}
