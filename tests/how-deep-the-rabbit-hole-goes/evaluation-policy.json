@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "primary_threshold": "HIGH",
+  "secondary_thresholds": ["MEDIUM"],
+  "predicted_positive": "At least one scanner finding at or above the threshold; a raw signal, not an agent safety verdict",
+  "error_policy": "Errors are unassessed, never silently counted as TN; report them separately and exit nonzero",
+  "unchecked_policy": "Report incomplete scans separately, including negatives with unchecked content; never equate a negative signal with SAFE",
+  "severity_policy": "Only score exact severity where explicitly annotated; minimum annotations measure threshold compliance and do not establish over-severity",
+  "development_policy": "140 frozen cases only; expected topic and annotated-file results separate from raw alert metrics; corpus is author-written",
+  "external_policy": "All 116 pinned deepset public test rows, unmodified upstream labels, no scanner-result filtering; exact severity and category accuracy unassessed",
+  "holdout_policy": "The 60 local holdout cases are not scored by this runner",
+  "tuning_policy": "No detection-rule or threshold tuning against the external baseline in this iteration"
+}

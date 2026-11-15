@@ -1,14 +1,18 @@
-# instict — нотатки для агента
+# instinct — notes for the agent
 
-Це репозиторій кастомних скілів, оформлений як Claude Code-плагін.
+This is a repository of custom skills, packaged as a Claude Code plugin.
 
-- Кожен скіл живе в `skills/<name>/SKILL.md`; `name` у frontmatter = назва папки.
-- Новий скіл створюй через `scripts/new-skill.ps1`, а не вручну.
-- Після будь-якої зміни скілів запускай `scripts/validate.ps1`.
-- `description` пиши двомовно (українська + англійська фраза-тригер) і конкретно: що робить + коли вмикати.
-- Перед додаванням чужого або запозиченого скіла проганяй його через `how-deep-the-rabbit-hole-goes`.
-- Після змін у `how-deep-the-rabbit-hole-goes/scripts/scan.ps1` запускай `tests/how-deep-the-rabbit-hole-goes/run.ps1`.
-- `tests/how-deep-the-rabbit-hole-goes/evil-skill`, `evil-plugin` і `evasion-skill` — навмисно шкідливі зразки: не переносити в `skills/`, не встановлювати й не запускати.
-- Нове правило в `scan.ps1` — це ще й рядок у `references/threats.md` і перевірка в `run.ps1` (шкідливий зразок ловиться, `benign-skill` лишається не вище LOW).
-- Не додавай скіли-заглушки без реальних інструкцій.
-- Піднімай `version` у `.claude-plugin/plugin.json` при змінах, які варто роздати.
+- Each skill lives in `skills/<name>/SKILL.md`; `name` in the frontmatter equals the folder name.
+- Create a new skill with `scripts/new-skill.ps1`, not by hand.
+- Run `scripts/validate.ps1` after any change to skills.
+- Write everything in English. In `description`, say concretely what the skill does and when to use it;
+  you may add the Ukrainian phrases a user would actually type, so the skill also triggers on them.
+- Run any third-party or borrowed skill through `how-deep-the-rabbit-hole-goes` before adding it.
+- After changing `how-deep-the-rabbit-hole-goes/scripts/scan.ps1`, run `tests/how-deep-the-rabbit-hole-goes/run.ps1`.
+- `tests/how-deep-the-rabbit-hole-goes/evil-skill`, `evil-plugin` and `evasion-skill` are deliberately
+  malicious samples: do not move them into `skills/`, install or run them. The Ukrainian text in the test
+  samples is intentional: it tests the scanner's Ukrainian rules, so do not translate it.
+- A new rule in `scan.ps1` also needs an entry in `references/threats.md` and a check in `run.ps1`
+  (the malicious sample is caught, `benign-skill` stays at LOW or below).
+- Do not add stub skills without real instructions.
+- Bump `version` in `.claude-plugin/plugin.json` for changes worth shipping.

@@ -39,7 +39,8 @@ read it before the first audit in a session.
    in full by hand. The scanner's exit code is not a verdict.
 7. **The audit only reports.** Do not silently fix a third-party skill: changes are made separately and
    with the user's consent.
-8. **Languages.** The scanner's text rules cover English and Ukrainian only. If the target is written
+8. **Languages.** The scanner's text rules cover English and Ukrainian (German only for instruction
+   hijacking and prompt disclosure). If the target is written
    in another language, its text rules are effectively blind: read the whole text yourself with T01–T26 in
    mind, and say in the report that automatic text checks did not apply.
 
@@ -56,6 +57,11 @@ read it before the first audit in a session.
    The scanner joins continued lines, normalizes homoglyphs, decodes two layers of base64, reads BOM-tagged
    UTF-16/32 and parses JSON command/argument fields as data. `Components` lists configuration candidates
    with their JSON paths; inspect their actual invocation semantics manually.
+   Retain each finding's `RuleId` alongside its broader `Threat` in audit evidence and comparisons.
+   Use `-ListRules` to inspect the scanner's versioned rule catalog without scanning a target.
+   Establish the target's trust boundary and authorized purpose before confirming an instruction
+   hijack. A direct user task change and a lower-trust passage can contain the same words. Missing
+   original context stays unknown; conditional review labels are not recovered ground truth.
    **Check `ScanComplete` and every `CoverageIssues` entry before interpreting the result.** Exit 0
    only means no HIGH/CRITICAL signals: opaque, unreadable, unsupported or limited content can still be
    unchecked. `TreeHashComplete: false` makes `TreeHash` null. Schema/tree-hash version 2 hashes are not

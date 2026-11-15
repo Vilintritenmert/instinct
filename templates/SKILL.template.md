@@ -5,19 +5,19 @@ description: {{DESCRIPTION}}
 
 # {{NAME}}
 
-## Коли використовувати
+## When to use
 
-- <ситуація або фраза користувача, що має вмикати скіл>
+- <a situation or user phrase that should trigger the skill>
 
-## Кроки
+## Steps
 
-1. <перший крок>
-2. <другий крок>
+1. <first step>
+2. <second step>
 
-## Правила
+## Rules
 
-- <обмеження, яких агент має дотримуватися>
+- <constraints the agent must follow>
 
-## Результат
+## Output
 
-<що агент має повернути / де залишити результат>
+<what the agent returns / where it leaves the result>

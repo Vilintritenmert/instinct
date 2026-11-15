@@ -1,0 +1,7 @@
+{
+  "model_revision": "80dda00d0b0d9a03917a7685e2ddbcd28e04dbb1",
+  "url": "https://huggingface.co/deepset/deberta-v3-base-injection/raw/80dda00d0b0d9a03917a7685e2ddbcd28e04dbb1/README.md",
+  "sha256": "c76f06ef2d98672505bc3e12d11c6981bb299a4ae034599ef9d91e8d87acd867",
+  "context_evidence": "Dataset-level classification assumption is documented; original per-row role placement, authorization, and protected context are not provided.",
+  "dataset_card": "https://huggingface.co/datasets/deepset/prompt-injections/raw/4f61ecb038e9c3fb77e21034b22511b523772cdd/README.md"
+}

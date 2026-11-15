@@ -1,0 +1,37 @@
+{
+  "corpus": "paraphrase-development-draft",
+  "version": 1,
+  "split": "development",
+  "authored_date": "2026-11-14",
+  "authoring_mode": "separate agent authoring from the explicit task brief only",
+  "synthetic": true,
+  "inert": true,
+  "executed_cases": false,
+  "blind_authoring": {
+    "scanner_source_read": false,
+    "existing_corpora_read": false,
+    "external_texts_or_labels_read": false,
+    "scan_outcomes_seen": false,
+    "basis": "Fresh synthetic wording authored without reading scanner code, other corpora, external attack examples, external labels, or scan results."
+  },
+  "review": {
+    "independent_human_review": false,
+    "independent_blind_label_review_completed": false,
+    "status": "Proposed author labels only; separate blind label review remains to be arranged before tuning."
+  },
+  "composition": {
+    "cases": 60,
+    "scenario_control_pairs": 30,
+    "english_pairs": 20,
+    "ukrainian_pairs": 10,
+    "english_cases": 40,
+    "ukrainian_cases": 20,
+    "malicious_cases": 30,
+    "benign_cases": 30,
+    "T01_pairs": 15,
+    "T06_pairs": 15
+  },
+  "destinations_or_secrets": "No real secrets, private messages, usable destinations, network instructions, or executable payloads are supplied. Protected texts are referred to but never provided.",
+  "freeze_policy": "Freeze before any scanner measurement. Do not make outcome-based edits. Subsequent substantive changes require a new identified corpus version and lock.",
+  "novelty_limit": "Independently authored wording; semantic or lexical uniqueness against unread corpora is not claimed."
+}

@@ -1,0 +1,61 @@
+{
+  "corpus": "paraphrase-development-v2",
+  "version": 1,
+  "frozen_date": "2026-11-15",
+  "state": "frozen-before-scanner-measurement",
+  "scanner_measurement_performed_by_author": false,
+  "outcomes_based_edits": false,
+  "inputs": [
+    {
+      "path": "cases.jsonl",
+      "bytes": 103235,
+      "sha256": "ae848ded370cbd8216173005a06b8043c772107934fcc7f7f9fa98dc5a65498d"
+    },
+    {
+      "path": "provenance.json",
+      "bytes": 2020,
+      "sha256": "c0dd66434ea55a8635a4e29ca8f4707a3ee43212f437ccbfefec96a9603f2787"
+    },
+    {
+      "path": "rubric.md",
+      "bytes": 3678,
+      "sha256": "6e50ee676979d88c42cc2ec969c4149756957b80b36a6c4ff6aa34defb872e6a"
+    }
+  ],
+  "validation": {
+    "jsonl_records": 80,
+    "paired_families": 40,
+    "one_malicious_and_one_benign_per_family": true,
+    "shared_context_within_each_pair": true,
+    "pairs_by_language": {
+      "en": 16,
+      "de": 14,
+      "uk": 10
+    },
+    "pairs_by_topic": {
+      "T01": 30,
+      "T06": 10
+    },
+    "pairs_by_language_topic": {
+      "de/T01": 10,
+      "de/T06": 4,
+      "en/T01": 12,
+      "en/T06": 4,
+      "uk/T01": 8,
+      "uk/T06": 2
+    },
+    "pairs_by_mechanism": {
+      "a": 5,
+      "b": 5,
+      "c": 5,
+      "d": 5,
+      "disclosure": 10,
+      "e": 5,
+      "f": 5
+    },
+    "unique_target_contents": 80,
+    "no_urls": true,
+    "utf8_lf_without_bom": true
+  },
+  "manifest_scope": "The three frozen input files above; lock.json intentionally does not hash itself."
+}
