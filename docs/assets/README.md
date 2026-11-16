@@ -1,8 +1,7 @@
 # README illustrations
 
 Original AI-generated illustrations inspired by Lewis Carroll's *Alice's Adventures in Wonderland*.
-Both the [English README](../../README.md) and [Ukrainian README](../../README.uk.md) use the same
-image files, with localized alt text and captions.
+Both appear in the project [README](../../README.md).
 
 Generated on 2026-11-16 with the built-in `image_gen` tool, then edited to add the owner-supplied
 “БЕЗ ДУШІ / WITHOUT SOUL” logo in the lower-right corner. The logo's exterior white background was

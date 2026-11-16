@@ -49,7 +49,7 @@ pwsh -NoProfile -File ./scripts/validate.ps1
 - `description` is at most 1024 characters and explains what the skill does and when to use it, using
   phrases a user would actually type.
 - Write skills, reference material and helper output in English. Ukrainian trigger phrases are
-  welcome. Maintain `README.md` and `README.uk.md` together when user-facing behavior changes.
+  welcome. Update `README.md`, the only README, when user-facing behavior changes.
 - Keep `SKILL.md` short; put long reference material in `references/`. Do not add placeholder skills.
 - Keep skills agent- and OS-neutral. Describe a step by what it does ("read the file", "run the
   command"), not by one agent's tool name, and name agent-specific files only as examples next to
@@ -131,7 +131,7 @@ misses, control alerts, errors and unchecked content. See the
 
 ## Documentation and release checks
 
-- Keep both READMEs aligned on setup, usage, status and limitations. Verify local links and run
+- Keep the README current on setup, usage, status and limitations. Verify local links and run
   documented read-only examples; keep output excerpts consistent with the current scanner.
 - For documentation-only changes, check links, examples and `git diff --check`; detection suites are
   needed when the corresponding code or fixtures change.

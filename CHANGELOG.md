@@ -25,10 +25,14 @@ The current package version is recorded in [plugin.json](plugin.json) and synchr
 
 ### Documentation
 
-- Add two AI-generated Alice in Wonderland illustrations to the English and Ukrainian READMEs,
-  with localized alt text and saved [artwork notes and generation prompts](docs/assets/README.md).
+- Add two AI-generated Alice in Wonderland illustrations to the README, with alt text and saved
+  [artwork notes and generation prompts](docs/assets/README.md).
 - Brand both README illustrations with the owner-supplied “БЕЗ ДУШІ / WITHOUT SOUL” logo without its
   exterior white background.
+- Remove the Ukrainian README; `README.md` is now the single, English user guide. The skill still
+  triggers on Ukrainian requests and reports in the user's language.
+- Update the README for this release: the rule-ID count, UTF-8 JSON output when redirected, and the
+  portable installer and portability test in the contributor workflow.
 
 ## 0.12.0
 

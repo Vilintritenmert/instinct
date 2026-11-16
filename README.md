@@ -21,8 +21,6 @@ plugin manifests provide host-specific packaging.
 
 [Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [How it works](#-how-it-works) • [Configuration](#-configuration) • [Limitations](#-limitations) • [Contributing](#-contributing)
 
-**English** · [Українська](README.uk.md)
-
 </div>
 
 ---
@@ -41,9 +39,9 @@ with evidence by file and line.
 
 - **Two-stage audit.** A PowerShell scanner reads every file without installing or running anything. The
   agent then confirms or dismisses each signal against the target's stated purpose.
-- **26 threat classes with stable rule IDs.** The classes range from prompt injection (T01) and access to secrets (T06) to
+- **26 threat classes, 232 stable rule IDs.** The classes range from prompt injection (T01) and access to secrets (T06) to
   plugin auto-run (T21) and channel hijacking (T24). Every finding has a class, a rule ID such as
-  `T05-001`, a severity, a file and a line.
+  `T05-001`, a severity, a file and a line. Rule IDs are never renumbered or reused.
 - **Agent-aware.** The scanner lists everything that can run or load on its own, whichever agent a
   target is built for: hooks, MCP and LSP servers (`.mcp.json`, `gemini-extension.json`), `bin/`, bundled
   settings (`settings.json`, `.codex/config.toml`), agents, commands, always-loaded instruction files
@@ -301,7 +299,7 @@ These are signals for manual review, not a verdict.
 | Option (`scan.ps1`) | `scan.sh` | Effect |
 |---|---|---|
 | `-Path <path>` | `<path>` | A skill, plugin or marketplace folder, or a single file. Required unless you list the rules. |
-| `-Json` | `--json` | Machine-readable output with findings, coverage issues, the inventory and SHA-256 hashes. |
+| `-Json` | `--json` | Machine-readable output with findings, coverage issues, the inventory and SHA-256 hashes. Written as UTF-8 when redirected to a file or pipe. |
 | `-MinSeverity <level>` | `--min-severity <level>` | Show findings at or above `LOW` (default), `MEDIUM`, `HIGH` or `CRITICAL`. Counts and exit codes stay the same. |
 | `-Inventory` | `--inventory` | Add the file inventory, file types and hashes to the human-readable output. JSON always includes them. |
 | `-ListRules` | `--list-rules` | Export the versioned rule catalog as JSON without scanning anything. |
@@ -413,7 +411,9 @@ those from earlier scanner versions. To get the same hash on every machine, clon
 Contributions are welcome. New detection rules, false-positive reports and testing on macOS and
 Linux help the most. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
 
-To try your local copy, run these from the repository root instead of the GitHub install:
+To try your local copy, install it with the same `scripts/install.py` command shown in
+[Installation](#-installation), adding `--update` to replace an earlier copy. For the Claude Code
+plugin, run these from the repository root instead of the GitHub install:
 
 ```bash
 claude plugin marketplace add .
@@ -423,8 +423,11 @@ claude plugin install instinct@instinct
 Then run the checks:
 
 ```bash
-# Validate skills after any change
+# Validate skills and plugin manifests after any change
 pwsh -NoProfile -File ./scripts/validate.ps1
+
+# Check the installer and scanner portability after packaging changes
+python -B ./tests/test_portability.py -v
 
 # Run the scanner test suite after changing scan.ps1
 pwsh -NoProfile -File ./tests/how-deep-the-rabbit-hole-goes/run.ps1
