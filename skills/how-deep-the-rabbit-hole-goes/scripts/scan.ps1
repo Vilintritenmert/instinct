@@ -40,18 +40,23 @@ function Get-BytesSha256([byte[]]$bytes) {
     try { [BitConverter]::ToString($hash.ComputeHash($bytes)).Replace('-', '').ToLowerInvariant() }
     finally { $hash.Dispose() }
 }
-# JSON reports carry file paths, which may hold any Unicode character. When this script is run
-# with `pwsh -File` and stdout is a pipe or file, PowerShell would encode them with the console
-# code page (e.g. 866 or 437 on Windows), silently replacing characters it lacks ('Ö' -> 'O').
-# Write UTF-8 bytes (no BOM) instead. Do not change [Console]::OutputEncoding: that resets the
-# code page of the console shared with the caller. Only -File leaves $MyInvocation.Line empty;
-# `& scan.ps1` from -Command or another script keeps returning a string to the caller.
-$script:topLevel = $MyInvocation.CommandOrigin -eq 'Runspace' -and -not $MyInvocation.Line
-function Write-JsonOutput([string]$text) {
-    if (-not ($script:topLevel -and [Console]::IsOutputRedirected)) { return $text }
-    $bytes = [Text.UTF8Encoding]::new($false).GetBytes($text + [Environment]::NewLine)
+# Reports carry file paths and evidence, which may hold any Unicode character. When this script is
+# run with `pwsh -File` and stdout is a pipe or file, PowerShell would encode them with the console
+# code page (e.g. 866 or 437 on Windows), silently replacing characters it lacks ('Ö' -> 'O') and
+# producing bytes a UTF-8 reader such as Git Bash cannot decode ('·' -> '�'). Write UTF-8 bytes
+# (no BOM) instead, for the text report as well as JSON. Do not change [Console]::OutputEncoding:
+# that resets the code page of the console shared with the caller. Only -File leaves
+# $MyInvocation.Line empty; `& scan.ps1` from -Command or another script keeps returning JSON as a
+# string and writing the text report to the host.
+$script:utf8Stdout = $MyInvocation.CommandOrigin -eq 'Runspace' -and -not $MyInvocation.Line -and [Console]::IsOutputRedirected
+function Write-Utf8Stdout([string]$text) {
+    $bytes = [Text.UTF8Encoding]::new($false).GetBytes($text)
     $stdout = [Console]::OpenStandardOutput()
     try { $stdout.Write($bytes, 0, $bytes.Length); $stdout.Flush() } finally { $stdout.Dispose() }
+}
+function Write-JsonOutput([string]$text) {
+    if (-not $script:utf8Stdout) { return $text }
+    Write-Utf8Stdout ($text + [Environment]::NewLine)
 }
 if (-not $ListRules) {
     $target = (Resolve-Path -LiteralPath $Path).Path
@@ -1217,28 +1222,37 @@ if ($Json) {
         Skills = @($skillNames); Domains = @($domains); Findings = @($sorted); Inventory = @($byPath)
     } | ConvertTo-Json -Depth 8)
 } else {
+    # On a console or in-process, lines go to the host with severity colors. A redirected `pwsh -File`
+    # run collects them and writes the report once, as UTF-8 (see Write-Utf8Stdout).
     $colors = @{ CRITICAL = 'Red'; HIGH = 'Magenta'; MEDIUM = 'Yellow'; LOW = 'Gray' }
-    Write-Host ("how-deep-the-rabbit-hole-goes scan: {0}" -f (Show-Invisible $target))
-    Write-Host ("Files: {0} · scripts: {1} · images: {2} · binary/archives/documents: {3} · symlinks: {4}" -f $stats.Files, $stats.Scripts, $stats.Images, $stats.Binary, $stats.Links)
-    Write-Host "Tree hash (SHA-256): $treeHash"
-    if ($Inventory) {
-        Write-Host ''
-        foreach ($f in $byPath) { Write-Host ("  {0,-9} {1,9}  {2}  {3}" -f $f.Kind, $f.Size, ($f.Sha256 ? $f.Sha256.Substring(0, 12) : '-'), (Show-Invisible $f.File)) }
+    $script:textReport = [Text.StringBuilder]::new()
+    function Write-ReportLine([string]$text = '', [string]$color = '') {
+        if ($script:utf8Stdout) { [void]$script:textReport.Append($text).Append([Environment]::NewLine) }
+        elseif ($color) { Write-Host $text -ForegroundColor $color }
+        else { Write-Host $text }
     }
-    Write-Host ''
+    Write-ReportLine ("how-deep-the-rabbit-hole-goes scan: {0}" -f (Show-Invisible $target))
+    Write-ReportLine ("Files: {0} · scripts: {1} · images: {2} · binary/archives/documents: {3} · symlinks: {4}" -f $stats.Files, $stats.Scripts, $stats.Images, $stats.Binary, $stats.Links)
+    Write-ReportLine "Tree hash (SHA-256): $treeHash"
+    if ($Inventory) {
+        Write-ReportLine
+        foreach ($f in $byPath) { Write-ReportLine ("  {0,-9} {1,9}  {2}  {3}" -f $f.Kind, $f.Size, ($f.Sha256 ? $f.Sha256.Substring(0, 12) : '-'), (Show-Invisible $f.File)) }
+    }
+    Write-ReportLine
     foreach ($f in $sorted) {
         $safeFile = Show-Invisible $f.File
         $loc = if ($f.Line) { "${safeFile}:$($f.Line)" } else { $safeFile }
-        Write-Host ("[{0}] {1} {2}  ({3})" -f $f.Severity, ($f.Threat + '/' + $f.RuleId), $loc, $f.Note) -ForegroundColor $colors[$f.Severity]
-        if ($f.Evidence) { Write-Host "    $($f.Evidence)" }
+        Write-ReportLine ("[{0}] {1} {2}  ({3})" -f $f.Severity, ($f.Threat + '/' + $f.RuleId), $loc, $f.Note) $colors[$f.Severity]
+        if ($f.Evidence) { Write-ReportLine "    $($f.Evidence)" }
     }
-    if ($domains.Count) { Write-Host ''; Write-Host ("External domains: {0}" -f (Show-Invisible (@($domains) -join ', '))) }
-    Write-Host ''
-    Write-Host ("Summary: CRITICAL {0} · HIGH {1} · MEDIUM {2} · LOW {3}" -f $counts.CRITICAL, $counts.HIGH, $counts.MEDIUM, $counts.LOW)
-    if ($threats) { Write-Host "Threats above LOW: $($threats -join ', ')" }
-    Write-Host ("Scan complete: {0} · coverage gaps: {1}" -f ($coverageIssues.Count -eq 0), $coverageIssues.Count)
-    foreach ($gap in $coverageIssues) { Write-Host ("  Unchecked: {0} ({1})" -f (Show-Invisible $gap.File), $gap.Reason) }
-    Write-Host 'These are signals for manual review, not a verdict.'
+    if ($domains.Count) { Write-ReportLine; Write-ReportLine ("External domains: {0}" -f (Show-Invisible (@($domains) -join ', '))) }
+    Write-ReportLine
+    Write-ReportLine ("Summary: CRITICAL {0} · HIGH {1} · MEDIUM {2} · LOW {3}" -f $counts.CRITICAL, $counts.HIGH, $counts.MEDIUM, $counts.LOW)
+    if ($threats) { Write-ReportLine "Threats above LOW: $($threats -join ', ')" }
+    Write-ReportLine ("Scan complete: {0} · coverage gaps: {1}" -f ($coverageIssues.Count -eq 0), $coverageIssues.Count)
+    foreach ($gap in $coverageIssues) { Write-ReportLine ("  Unchecked: {0} ({1})" -f (Show-Invisible $gap.File), $gap.Reason) }
+    Write-ReportLine 'These are signals for manual review, not a verdict.'
+    if ($script:utf8Stdout) { Write-Utf8Stdout $script:textReport.ToString() }
 }
 
 if ($counts.CRITICAL) { exit 2 } elseif ($counts.HIGH) { exit 1 } else { exit 0 }
