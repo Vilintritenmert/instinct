@@ -27,8 +27,8 @@ the agent loading them.
   the malicious sample must be caught while `benign-skill` stays at LOW or below.
 - Preserve stable rule IDs, ordinal path ordering, exact-byte hashing and explicit coverage gaps.
   Give OS-specific probes an explicit skip on unsupported hosts.
-- Maintain `README.md` and `README.uk.md` together for user-facing behavior changes. Record changes
-  worth shipping in `CHANGELOG.md` and bump the plugin version in all packaging manifests.
+- Update `README.md` for user-facing behavior changes; it is the only README, in English. Record
+  changes worth shipping in `CHANGELOG.md` and bump the plugin version in all packaging manifests.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development and release checks. Use the tools provided by
 the current agent; these instructions do not require any particular AI provider or model.
