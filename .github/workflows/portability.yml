@@ -56,7 +56,9 @@ jobs:
         with:
           name: portability-${{ runner.os }}
           path: .ci-results/*.json
-          if-no-files-found: warn
+          # .ci-results is a dot-directory, which upload-artifact skips unless told otherwise.
+          include-hidden-files: true
+          if-no-files-found: error
 
   compare:
     name: Compare scanner results across operating systems
