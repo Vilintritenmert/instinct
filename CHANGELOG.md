@@ -8,6 +8,48 @@ The current package version is recorded in [.claude-plugin/plugin.json](.claude-
 
 ### Documentation
 
+- Add two AI-generated Alice in Wonderland illustrations to the English and Ukrainian READMEs,
+  with localized alt text and saved [artwork notes and generation prompts](docs/assets/README.md).
+
+## 0.12.0
+
+### Agent and OS portability
+
+- Make the skill agent-neutral: steps name actions instead of Claude Code tools, and the inventory,
+  cleanup and dynamic-command guidance covers Codex, Gemini CLI, Cursor, GitHub Copilot, Windsurf,
+  Cline and other agents. Document installing the skill folder in any agent that loads `SKILL.md`.
+- Recognize other agents' auto-run and always-loaded files: `gemini-extension.json`,
+  `claude_desktop_config.json` and `cline_mcp_settings.json` (MCP), `.codex/config.toml` and
+  `opencode.json` (settings), `prompts/`, `chatmodes/` and `commands/*.toml`, plus Cursor, Windsurf,
+  Cline, Roo, Kiro and Copilot instruction files. New rule T21-006 flags `!{…}` shell injection in
+  Gemini CLI command files. Agent credential and API-redirect rules now include Gemini CLI, Copilot and
+  OpenCode.
+- Make the tree hash identical on every OS and locale: paths are sorted ordinally (the culture-aware
+  sort gave different hashes for the same files under, for example, Lithuanian and Swedish locales).
+  `TreeHashVersion` is now 3; a multi-file hash from 0.11.0 or earlier can differ for the same files,
+  so rebaseline stored hashes.
+- Walk and hash target files through .NET instead of PowerShell path cmdlets, which treat `\` as a
+  folder separator even on macOS/Linux: such files could not be hashed and such folders were skipped.
+  Hash empty files without opening them, and identify named pipes, devices and sockets with the system
+  `find` (T19-919) without opening them, so that a FIFO cannot hang the scan.
+- List findings, inventory, components, coverage issues and skills in a total ordinal order, so that the
+  same target gives byte-identical JSON on every OS and in every locale.
+- Treat Finder/Explorer metadata (`.DS_Store`, AppleDouble `._*`, `Thumbs.db`) whose header matches as
+  LOW (T19-918) instead of a HIGH binary. Add macOS, Windows and systemd launcher extensions, and count
+  extensionless files with a shebang as scripts.
+- Add `scan.sh`, a POSIX `sh` wrapper for macOS, Linux and other Unix-like systems. It finds `pwsh`
+  (`$PWSH`, `PATH`, common install folders), takes Unix-style options (`--json`, `--min-severity`,
+  `--list-rules`, `--`), returns the scanner's exact output and exit code, and exits `127` with
+  per-OS install hints when PowerShell is missing. It is kept LF in Windows checkouts.
+- Give OS-neutral scanner instructions: one command for every shell, exit-code capture per shell,
+  PowerShell install options per OS, a manual fallback without `pwsh`, and cloning with
+  `core.autocrlf=false`, with a symlink check for Windows checkouts.
+- Expand the rule catalog to 232 stable IDs while preserving all 229 earlier IDs. Add agent, OS and
+  locale regression probes. Verified on Windows 11 and on Linux (Ubuntu 24.04 in WSL, PowerShell
+  7.7.0), for both a CRLF and an LF checkout; macOS is not yet verified.
+
+### Documentation
+
 - Reorganize English and Ukrainian READMEs around installation, first use, audit results and limits.
 - Replace the marketplace owner placeholder with `Vilintritenmert/instinct`; document plugin updates
   and uninstallation separately from marketplace refreshes.

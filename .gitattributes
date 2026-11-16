@@ -6,3 +6,6 @@ tests/how-deep-the-rabbit-hole-goes/paraphrase-development/** -text
 tests/how-deep-the-rabbit-hole-goes/paraphrase-review-v1.json -text
 tests/how-deep-the-rabbit-hole-goes/paraphrase-development-v2/** -text
 tests/how-deep-the-rabbit-hole-goes/paraphrase-review-v2.json -text
+
+# The Unix wrapper must keep LF line endings even in a Windows checkout: a CR breaks `sh`.
+skills/how-deep-the-rabbit-hole-goes/scripts/scan.sh text eol=lf

@@ -4,13 +4,16 @@
 
 **See how deep the rabbit hole goes — before a skill runs with your permissions.**
 
-A Claude Code plugin that security-audits agent skills, plugins and marketplaces before you install them.
+![Alice and the White Rabbit pause beside a glowing rabbit hole in an enchanted woodland.](docs/assets/alice-rabbit-hole.png)
+
+A security audit for agent skills, plugins and marketplaces before you install them. It works in any agent
+that loads `SKILL.md` skills and ships as a Claude Code plugin.
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-0.11.0-blue?style=for-the-badge)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.12.0-blue?style=for-the-badge)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
-[![Platform: Claude Code](https://img.shields.io/badge/platform-Claude%20Code-D97757?style=for-the-badge)](https://code.claude.com/docs/en/overview)
+[![Agents: any SKILL.md agent](https://img.shields.io/badge/agents-any%20SKILL.md%20agent-D97757?style=for-the-badge)](#other-agents)
 [![PowerShell 7+](https://img.shields.io/badge/PowerShell-7%2B-5391FE?style=for-the-badge&logo=powershell&logoColor=white)](https://learn.microsoft.com/powershell/scripting/install/installing-powershell)
 [![Status: Experimental](https://img.shields.io/badge/status-experimental-orange?style=for-the-badge)](#-limitations)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge)](CONTRIBUTING.md)
@@ -40,8 +43,12 @@ with evidence by file and line.
 - **26 threat classes with stable rule IDs.** The classes range from prompt injection (T01) and access to secrets (T06) to
   plugin auto-run (T21) and channel hijacking (T24). Every finding has a class, a rule ID such as
   `T05-001`, a severity, a file and a line.
-- **Plugin-aware.** The scanner lists everything that can run on its own: `hooks/`, `.mcp.json`,
-  `.lsp.json`, `bin/`, `settings.json`, agents, commands, and external sources in `marketplace.json`.
+- **Agent-aware.** The scanner lists everything that can run or load on its own, whichever agent a
+  target is built for: hooks, MCP and LSP servers (`.mcp.json`, `gemini-extension.json`), `bin/`, bundled
+  settings (`settings.json`, `.codex/config.toml`), agents, commands, always-loaded instruction files
+  (`AGENTS.md`, `.cursor/rules/`, `.github/copilot-instructions.md`) and external sources in `marketplace.json`.
+- **Cross-platform.** The scanner gives the same tree hash for the same files on Windows, macOS and
+  Linux in any locale. It knows each OS's launcher files and never opens named pipes.
 - **Resists evasion.** It joins continued lines, normalizes homoglyphs, detects invisible characters,
   decodes two layers of base64, reads BOM-tagged UTF-16/32 and parses JSON command fields as data.
 - **Reports what it could not check.** Anything it cannot inspect (archives, binaries, unsupported
@@ -54,54 +61,67 @@ with evidence by file and line.
 
 | Requirement | Needed for | Notes |
 |---|---|---|
-| [Claude Code](https://code.claude.com/docs/en/overview) with plugin support | The audit skill | Any version that supports `claude plugin` commands |
-| [PowerShell 7+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) on `PATH` as `pwsh` | The scanner | Without it, the agent falls back to a manual review against the threat catalog |
-| Git | The standalone scanner | Only needed to clone this repository |
+| [Claude Code](https://code.claude.com/docs/en/overview) with plugin support, or [another agent](#other-agents) that loads `SKILL.md` skills | The audit skill | Claude Code 2.1.275+ for the one-line install; older versions use the two-step form |
+| [PowerShell 7+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) on `PATH` as `pwsh` | The scanner | Runs on Windows, macOS and Linux. Without it, the agent falls back to a manual review against the threat catalog |
+| Git | The standalone scanner, other agents | Only needed to clone this repository |
 
 > [!NOTE]
-> So far it has been verified on Windows only. Testing on macOS and Linux is still to come.
+> Verified on Windows 11 and Linux (Ubuntu 24.04, PowerShell 7.7.0): the full test suite passes on both,
+> and the same files give byte-identical scanner output on both. macOS has not been tested yet.
 
 ## 📦 Installation
 
-Run in your terminal:
+Inside Claude Code, run:
+
+```text
+/plugin install instinct --marketplace Vilintritenmert/instinct
+/reload-plugins
+```
+
+<details>
+<summary><b>Older Claude Code, or prefer the terminal?</b></summary>
+
+<br>
+
+The one-line form needs Claude Code 2.1.275 or later. On older versions, or from a terminal, install in
+two steps and then start a new session:
 
 ```bash
 claude plugin marketplace add Vilintritenmert/instinct
 claude plugin install instinct@instinct
-claude
 ```
 
-> [!TIP]
-> If you work from a local clone, run `claude plugin marketplace add .` from the repository root instead of
-> adding the GitHub source.
-
-<details>
-<summary><b>Update or uninstall</b></summary>
-
-<br>
-
-To update, refresh the marketplace, update the plugin and start a new Claude Code session:
-
-```bash
-claude plugin marketplace update instinct
-claude plugin update instinct@instinct
-```
-
-Uninstall:
-
-```bash
-claude plugin uninstall instinct@instinct
-```
-
-See the official [plugin command reference](https://code.claude.com/docs/en/plugins/cli-reference) for
-installation scopes and command details.
+See the [plugin command reference](https://code.claude.com/docs/en/plugins/cli-reference) for
+installation scopes.
 
 </details>
 
+**Updates:** Claude Code doesn't auto-update third-party plugins by default. Turn it on for the
+**instinct** marketplace on the Marketplaces tab of `/plugin`, or update by hand with
+`claude plugin marketplace update instinct` and `claude plugin update instinct@instinct`, then run
+`/reload-plugins`. To remove the plugin, run `claude plugin uninstall instinct@instinct`.
+
+<a id="other-agents"></a>
+
+### Other agents
+
+The skill is a plain folder in the open Agent Skills format (`SKILL.md` plus `scripts/` and
+`references/`), so Codex, Gemini CLI, GitHub Copilot, Cursor, OpenCode and other agents that load skills
+can use it. Clone the repository and copy the whole folder into the directory where your agent looks
+for skills (see your agent's documentation):
+
+```bash
+git clone --depth 1 https://github.com/Vilintritenmert/instinct.git
+```
+
+Copy `instinct/skills/how-deep-the-rabbit-hole-goes` with its subfolders. If your agent has no skill
+support, ask it to read `skills/how-deep-the-rabbit-hole-goes/SKILL.md` and follow it for the audit. To
+update, pull the repository and copy the folder again.
+
 ## 🚀 Usage
 
-In a Claude Code session, ask in your own words and give it a local path. The path can be absolute or
-relative to the folder where you started `claude`:
+In your agent's session, ask in your own words and give it a local path. The path can be absolute or
+relative to the folder where you started the agent:
 
 ```text
 Security-audit the skill in ../candidate-skill before I install it.
@@ -181,6 +201,11 @@ flowchart LR
 3. **Verdict.** The agent gives a verdict, a recommendation, the evidence behind it and any remaining
    coverage gaps. A scanner run on its own never produces a verdict.
 
+![Alice examines a parchment through a magnifying glass while the White Rabbit waits beside a closed door.](docs/assets/alice-inspects-the-fine-print.png)
+
+*Read the fine print before following the rabbit. AI-generated illustrations inspired by Alice in
+Wonderland; see the [artwork notes and prompts](docs/assets/README.md).*
+
 <details>
 <summary><b>Threat catalog: T01–T26</b></summary>
 
@@ -209,12 +234,21 @@ rules and a mapping to the OWASP Top 10 for LLM Applications.
 
 ## 🔧 Configuration
 
-The scanner also works without Claude Code, for example in CI or as a quick first pass:
+The scanner also works without any agent, for example in CI or as a quick first pass. The commands are
+the same on Windows, macOS and Linux:
 
 ```bash
 git clone https://github.com/Vilintritenmert/instinct.git
 cd instinct
 pwsh -NoProfile -File ./skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1 -Path ./tests/how-deep-the-rabbit-hole-goes/clean-skill
+```
+
+On macOS, Linux and other Unix-like systems you can use the POSIX `sh` wrapper instead. It finds `pwsh`
+even when it is not on `PATH`, takes Unix-style options and gives the same output and exit code:
+
+```bash
+sh ./skills/how-deep-the-rabbit-hole-goes/scripts/scan.sh ./tests/how-deep-the-rabbit-hole-goes/clean-skill
+sh ./skills/how-deep-the-rabbit-hole-goes/scripts/scan.sh --help
 ```
 
 The output ends with:
@@ -225,19 +259,20 @@ Scan complete: True · coverage gaps: 0
 These are signals for manual review, not a verdict.
 ```
 
-| Option | Effect |
-|---|---|
-| `-Path <path>` | A skill, plugin or marketplace folder, or a single file. Required unless you use `-ListRules`. |
-| `-Json` | Machine-readable output with findings, coverage issues, the inventory and SHA-256 hashes. |
-| `-MinSeverity <level>` | Show findings at or above `LOW` (default), `MEDIUM`, `HIGH` or `CRITICAL`. Counts and exit codes stay the same. |
-| `-Inventory` | Add the file inventory, file types and hashes to the human-readable output. JSON always includes them. |
-| `-ListRules` | Export the versioned rule catalog as JSON without scanning anything. |
+| Option (`scan.ps1`) | `scan.sh` | Effect |
+|---|---|---|
+| `-Path <path>` | `<path>` | A skill, plugin or marketplace folder, or a single file. Required unless you list the rules. |
+| `-Json` | `--json` | Machine-readable output with findings, coverage issues, the inventory and SHA-256 hashes. |
+| `-MinSeverity <level>` | `--min-severity <level>` | Show findings at or above `LOW` (default), `MEDIUM`, `HIGH` or `CRITICAL`. Counts and exit codes stay the same. |
+| `-Inventory` | `--inventory` | Add the file inventory, file types and hashes to the human-readable output. JSON always includes them. |
+| `-ListRules` | `--list-rules` | Export the versioned rule catalog as JSON without scanning anything. |
 
 | Exit code | Meaning |
 |---|---|
 | `2` | At least one CRITICAL signal. |
 | `1` | At least one HIGH signal and no CRITICAL. |
 | `0` | No HIGH or CRITICAL signal. MEDIUM and LOW findings and coverage gaps may remain. |
+| `64`, `127` | `scan.sh` only: a usage error, or PowerShell 7+ was not found (it prints how to install it; set `PWSH` to use a specific `pwsh`). |
 
 > [!CAUTION]
 > Exit `0` does not mean "safe". Check `ScanComplete` and every `CoverageIssues` entry before you draw any
@@ -283,7 +318,7 @@ The scanner only reads the sample. Never install it or run its hooks.
 ```json
 {
   "SchemaVersion": 2,
-  "TreeHashVersion": 2,
+  "TreeHashVersion": 3,
   "RuleCatalogVersion": 1,
   "TreeHash": "2ced65e1e244cdd7dbcda3dbf54f739e6f77e4a6c3148f48c485bc9bb201b340",
   "Stats": { "Files": 1, "Scripts": 0, "Images": 0, "Binary": 0, "Links": 0 },
@@ -306,14 +341,15 @@ The scanner only reads the sample. Never install it or run its hooks.
 }
 ```
 
-When `TreeHashComplete` is `false`, `TreeHash` is `null`. Hashes from schema and tree-hash version 2 cannot be
-compared with those from earlier scanner versions. See the [scanner guide](docs/SCANNER.md) for the full output format.
+When `TreeHashComplete` is `false`, `TreeHash` is `null`. Tree-hash version 3 hashes cannot be compared with
+those from earlier scanner versions. To get the same hash on every machine, clone a target with
+`git -c core.autocrlf=false`. See the [scanner guide](docs/SCANNER.md) for the full output format.
 
 </details>
 
 ## 🚧 Limitations
 
-- **Detection on an outside dataset is weak.** At the HIGH+ threshold, version 0.11.0 detects **1 of 60**
+- **Detection on an outside dataset is weak.** At the HIGH+ threshold, version 0.12.0 detects **1 of 60**
   texts labeled as injections and flags **0 of 56** texts labeled as harmless in the pinned deepset public test split. See
   the [evaluation guide](tests/how-deep-the-rabbit-hole-goes/EVALUATION.md).
 - Pattern matching can miss new or indirect instructions and can flag legitimate security examples. It
@@ -335,7 +371,16 @@ compared with those from earlier scanner versions. See the [scanner guide](docs/
 ## 🤝 Contributing
 
 Contributions are welcome. New detection rules, false-positive reports and testing on macOS and
-Linux help the most. Start with [CONTRIBUTING.md](CONTRIBUTING.md), then run the checks:
+Linux help the most. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+
+To try your local copy, run these from the repository root instead of the GitHub install:
+
+```bash
+claude plugin marketplace add .
+claude plugin install instinct@instinct
+```
+
+Then run the checks:
 
 ```bash
 # Validate skills after any change

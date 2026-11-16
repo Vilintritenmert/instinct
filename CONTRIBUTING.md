@@ -1,6 +1,7 @@
 # Contributing to instinct
 
-instinct is an experimental Claude Code plugin for auditing agent skills and plugins. Read the
+instinct is an experimental skill for auditing agent skills and plugins. It works in any agent that
+loads `SKILL.md` skills and is packaged as a Claude Code plugin. Read the
 [README](README.md), [coverage contract](skills/how-deep-the-rabbit-hole-goes/references/coverage.md)
 and [security policy](SECURITY.md) before proposing a change.
 
@@ -11,8 +12,10 @@ and [security policy](SECURITY.md) before proposing a change.
 - Python 3.10+ for evaluation and corpus/review tests; these use the standard library.
 - Claude Code with plugin support for manual plugin integration checks.
 
-Run commands below from the repository root. Windows is the verified platform so far; include your
-PowerShell, Python and operating-system versions when reporting results on macOS or Linux.
+Run commands below from the repository root. Windows and Linux are verified so far; macOS is not.
+Include your PowerShell, Python and operating-system versions when reporting results. To check the
+Unix-only probes from Windows, run the suite in WSL with PowerShell for Linux, on the Linux file system
+(not `/mnt/c`).
 
 ## Repository layout
 
@@ -41,6 +44,9 @@ pwsh -NoProfile -File ./scripts/validate.ps1
 - Write skills, reference material and helper output in English. Ukrainian trigger phrases are
   welcome. Maintain `README.md` and `README.uk.md` together when user-facing behavior changes.
 - Keep `SKILL.md` short; put long reference material in `references/`. Do not add placeholder skills.
+- Keep skills agent- and OS-neutral. Describe a step by what it does ("read the file", "run the
+  command"), not by one agent's tool name, and name agent-specific files only as examples next to
+  their equivalents. Give commands that work in every shell, or one variant per OS.
 - Audit any third-party or borrowed skill with `how-deep-the-rabbit-hole-goes` before adding it.
 
 ## Changing the scanner
@@ -48,6 +54,15 @@ pwsh -NoProfile -File ./scripts/validate.ps1
 A new detection rule needs a threat-catalog entry and a regression with an inert positive example and
 a near-benign control. Keep `benign-skill` at LOW or below. Give new rules unused stable IDs; never
 renumber, reassign or reuse existing IDs. Update structural metadata for structural checks.
+
+Keep the scanner portable: compare and sort paths ordinally (never by the current culture), report
+paths with `/`, check a file's type before opening it, and give an OS-only probe an explicit skip, as
+the link and Unix probes do. Handle target paths with .NET (`[IO.Path]`, `[IO.File]`,
+`DirectoryInfo`), not PowerShell path cmdlets: `Join-Path`, `Get-ChildItem` and `Get-FileHash` treat
+`\` as a separator even on macOS/Linux, where it is a legal file-name character. When a check is about
+one agent's file layout, look for the equivalent files of other agents too. Keep `scripts/scan.sh` to
+POSIX `sh` (test it with dash, not only bash) and give it no logic beyond finding `pwsh` and
+translating options. The scanning stays in `scan.ps1`.
 
 Run skill validation after any skill change, and the regression suite after editing `scan.ps1`:
 
