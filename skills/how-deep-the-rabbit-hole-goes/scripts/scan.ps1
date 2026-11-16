@@ -33,6 +33,26 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# PowerShell 7.0 uses .NET Core 3.1, before SHA256.HashData and Convert.ToHexString.
+# Keep the byte representation identical on every supported runtime.
+function Get-BytesSha256([byte[]]$bytes) {
+    $hash = [Security.Cryptography.SHA256]::Create()
+    try { [BitConverter]::ToString($hash.ComputeHash($bytes)).Replace('-', '').ToLowerInvariant() }
+    finally { $hash.Dispose() }
+}
+# JSON reports carry file paths, which may hold any Unicode character. When this script is run
+# with `pwsh -File` and stdout is a pipe or file, PowerShell would encode them with the console
+# code page (e.g. 866 or 437 on Windows), silently replacing characters it lacks ('Ö' -> 'O').
+# Write UTF-8 bytes (no BOM) instead. Do not change [Console]::OutputEncoding: that resets the
+# code page of the console shared with the caller. Only -File leaves $MyInvocation.Line empty;
+# `& scan.ps1` from -Command or another script keeps returning a string to the caller.
+$script:topLevel = $MyInvocation.CommandOrigin -eq 'Runspace' -and -not $MyInvocation.Line
+function Write-JsonOutput([string]$text) {
+    if (-not ($script:topLevel -and [Console]::IsOutputRedirected)) { return $text }
+    $bytes = [Text.UTF8Encoding]::new($false).GetBytes($text + [Environment]::NewLine)
+    $stdout = [Console]::OpenStandardOutput()
+    try { $stdout.Write($bytes, 0, $bytes.Length); $stdout.Flush() } finally { $stdout.Dispose() }
+}
 if (-not $ListRules) {
     $target = (Resolve-Path -LiteralPath $Path).Path
     $isFile = Test-Path -LiteralPath $target -PathType Leaf
@@ -314,9 +334,9 @@ foreach ($entry in $catalogRules) {
     $catalogById[$entry.RuleId]=$entry
 }
 $catalogJson = ConvertTo-Json -InputObject @($catalogRules) -Depth 6 -Compress
-$catalogSha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($catalogJson))).ToLowerInvariant()
+$catalogSha256 = Get-BytesSha256 ([Text.Encoding]::UTF8.GetBytes($catalogJson))
 if ($ListRules) {
-    [pscustomobject]@{ RuleCatalogVersion=1; RuleCatalogSha256=$catalogSha256; Rules=@($catalogRules) } | ConvertTo-Json -Depth 6
+    Write-JsonOutput ([pscustomobject]@{ RuleCatalogVersion=1; RuleCatalogSha256=$catalogSha256; Rules=@($catalogRules) } | ConvertTo-Json -Depth 6)
     exit 0
 }
 
@@ -464,8 +484,9 @@ function Test-SpecialFile([IO.FileInfo]$item) {
 # separator even on macOS/Linux, where it is a legal file-name character.
 function Get-Sha256([string]$path) {
     $stream = [IO.File]::OpenRead($path)
-    try { [Convert]::ToHexString([Security.Cryptography.SHA256]::Create().ComputeHash($stream)).ToLowerInvariant() }
-    finally { $stream.Dispose() }
+    $hash = [Security.Cryptography.SHA256]::Create()
+    try { [BitConverter]::ToString($hash.ComputeHash($stream)).Replace('-', '').ToLowerInvariant() }
+    finally { $hash.Dispose(); $stream.Dispose() }
 }
 $domains = [System.Collections.Generic.SortedSet[string]]::new([StringComparer]::Ordinal)
 $stats = [ordered]@{ Files = 0; Scripts = 0; Images = 0; Binary = 0; Links = 0 }
@@ -782,7 +803,7 @@ foreach ($item in $items) {
         $stats.Links++
         Add-Finding -RuleId 'T17-901' 'HIGH' 'T17' $rel 0 "-> $($item.Target)" 'symlink (where does it lead?)'
         $linkText = [string]::Join('|', @($item.Target))
-        $linkHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($linkText))).ToLowerInvariant()
+        $linkHash = Get-BytesSha256 ([Text.Encoding]::UTF8.GetBytes($linkText))
         $fileList.Add([pscustomobject]@{ File = $rel; Size = 0; Kind = 'link'; Sha256 = $linkHash; LinkTarget = $linkText })
         Add-CoverageIssue $rel 'link target not followed'
         continue
@@ -899,7 +920,7 @@ foreach ($item in $items) {
         $entry.Kind='skipped'; Add-Finding -RuleId 'T19-917' 'MEDIUM' 'T19' $rel 0 '' 'invalid or unsupported text encoding — content not checked'; continue
     }
     # The digest of text refers to the exact bytes that were inspected.
-    $entry.Sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+    $entry.Sha256 = Get-BytesSha256 $bytes
     $texts[$item.FullName] = $text
     # On macOS/Linux a script needs no extension: a shebang line is enough to run it directly.
     if ($entry.Kind -eq 'text' -and $text.StartsWith('#!', [StringComparison]::Ordinal)) { $stats.Scripts++; $entry.Kind = 'script' }
@@ -1153,7 +1174,7 @@ $byPath = [System.Collections.Generic.List[object]]::new($fileList)
 $byPath.Sort([Comparison[object]] { param($x, $y) [string]::CompareOrdinal($x.File, $y.File) })
 $manifest = @($byPath | Select-Object File,Kind,Size,Sha256) | ConvertTo-Json -Compress
 $treeHashComplete = -not @($fileList | Where-Object { -not $_.Sha256 }).Count -and -not @($coverageIssues | Where-Object Reason -eq 'directory could not be enumerated').Count
-$treeHash = -join ([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($manifest)) | ForEach-Object { $_.ToString('x2') })
+$treeHash = Get-BytesSha256 ([Text.Encoding]::UTF8.GetBytes($manifest))
 
 if (-not $treeHashComplete) { $treeHash = $null }
 
@@ -1189,12 +1210,12 @@ $skillNames = [System.Collections.Generic.List[string]]::new([string[]]@($fmName
 $skillNames.Sort([StringComparer]::Ordinal)
 
 if ($Json) {
-    [pscustomobject]@{
+    Write-JsonOutput ([pscustomobject]@{
         SchemaVersion = 2; TreeHashVersion = 3; RuleCatalogVersion = 1; RuleCatalogSha256 = $catalogSha256
         Target = $target; TreeHash = $treeHash; Stats = $stats; Counts = $counts; Threats = $threats
         ScanComplete = ($coverageIssues.Count -eq 0); CoverageIssues = @($coverageIssues); TreeHashComplete = $treeHashComplete; Components = @($components)
         Skills = @($skillNames); Domains = @($domains); Findings = @($sorted); Inventory = @($byPath)
-    } | ConvertTo-Json -Depth 8
+    } | ConvertTo-Json -Depth 8)
 } else {
     $colors = @{ CRITICAL = 'Red'; HIGH = 'Magenta'; MEDIUM = 'Yellow'; LOW = 'Gray' }
     Write-Host ("how-deep-the-rabbit-hole-goes scan: {0}" -f (Show-Invisible $target))

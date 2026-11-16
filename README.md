@@ -6,12 +6,13 @@
 
 ![Alice and the White Rabbit pause beside a glowing rabbit hole in an enchanted woodland.](docs/assets/alice-rabbit-hole.png)
 
-A security audit for agent skills, plugins and marketplaces before you install them. It works in any agent
-that loads `SKILL.md` skills and ships as a Claude Code plugin.
+A security audit for agent skills, plugins and marketplaces before you install them. One shared
+`SKILL.md` skill works with capable agents on Windows, Linux and macOS; portable and Claude Code
+plugin manifests provide host-specific packaging.
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-0.12.0-blue?style=for-the-badge)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.13.0-blue?style=for-the-badge)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 [![Agents: any SKILL.md agent](https://img.shields.io/badge/agents-any%20SKILL.md%20agent-D97757?style=for-the-badge)](#other-agents)
 [![PowerShell 7+](https://img.shields.io/badge/PowerShell-7%2B-5391FE?style=for-the-badge&logo=powershell&logoColor=white)](https://learn.microsoft.com/powershell/scripting/install/installing-powershell)
@@ -61,16 +62,44 @@ with evidence by file and line.
 
 | Requirement | Needed for | Notes |
 |---|---|---|
-| [Claude Code](https://code.claude.com/docs/en/overview) with plugin support, or [another agent](#other-agents) that loads `SKILL.md` skills | The audit skill | Claude Code 2.1.275+ for the one-line install; older versions use the two-step form |
+| An agent that can read local files and follow the audit instructions | The audit skill | Native `SKILL.md` discovery is convenient; manual loading also works. A shell is needed to run the scanner |
 | [PowerShell 7+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) on `PATH` as `pwsh` | The scanner | Runs on Windows, macOS and Linux. Without it, the agent falls back to a manual review against the threat catalog |
-| Git | The standalone scanner, other agents | Only needed to clone this repository |
+| Python 3.10+ | The optional portable installer | Standard library only; not required by the scanner or a manually copied skill |
+| Git | A source checkout | Only needed to clone this repository |
 
 > [!NOTE]
-> Verified on Windows 11 and Linux (Ubuntu 24.04, PowerShell 7.7.0): the full test suite passes on both,
-> and the same files give byte-identical scanner output on both. macOS has not been tested yet.
+> The scanner regression suite passes on Windows 11 (PowerShell 7.6.9). Portable installation and
+> installed-scanner checks pass on Windows and Ubuntu 24.04 (PowerShell 7.7.0), with matching scanner
+> results for identical fixture bytes. macOS CI is configured; execution there remains unverified.
 
 ## 📦 Installation
 
+Clone the repository, then install the complete skill into the project where you use your agent:
+
+```text
+git clone --depth 1 https://github.com/Vilintritenmert/instinct.git
+cd instinct
+python scripts/install.py --agent codex --project-root "../my-project"
+```
+
+Use `--agent claude` for Claude Code. The installer uses Python 3.10+; if `python` is not your Python 3
+command, use `py -3` on Windows or `python3` on macOS/Linux. To preview paths without writing files,
+add `--dry-run`. For all your projects, use `--scope user` instead of `--project-root`.
+
+| Agent preset | Project scope (default) | User scope |
+|---|---|---|
+| Codex | `<project>/.agents/skills/how-deep-the-rabbit-hole-goes` | `~/.agents/skills/how-deep-the-rabbit-hole-goes` |
+| Claude Code | `<project>/.claude/skills/how-deep-the-rabbit-hole-goes` | `~/.claude/skills/how-deep-the-rabbit-hole-goes` |
+
+These paths follow the official [Codex skill locations](https://developers.openai.com/codex/skills)
+and [Claude Code skill locations](https://code.claude.com/docs/en/skills#choose-where-skills-load).
+The helper only copies this repository's skill; it does not install an agent or PowerShell, change
+permissions, or register a marketplace. See the [portability guide](docs/PORTABILITY.md) for other
+agents, custom directories and updates.
+
+### Claude Code plugin
+
+If you prefer Claude Code's marketplace distribution, use its plugin flow instead of the skill copy.
 Inside Claude Code, run:
 
 ```text
@@ -105,18 +134,28 @@ installation scopes.
 
 ### Other agents
 
-The skill is a plain folder in the open Agent Skills format (`SKILL.md` plus `scripts/` and
-`references/`), so Codex, Gemini CLI, GitHub Copilot, Cursor, OpenCode and other agents that load skills
-can use it. Clone the repository and copy the whole folder into the directory where your agent looks
-for skills (see your agent's documentation):
+The shared folder uses the open [Agent Skills format](https://agentskills.io/specification):
+`SKILL.md` plus `scripts/` and `references/`. For Gemini CLI, GitHub Copilot, Cursor, OpenCode or
+another host, choose the skill directory documented by that host and use a custom destination:
 
-```bash
-git clone --depth 1 https://github.com/Vilintritenmert/instinct.git
+```text
+python scripts/install.py --destination "../other-agent-skills"
 ```
 
-Copy `instinct/skills/how-deep-the-rabbit-hole-goes` with its subfolders. If your agent has no skill
-support, ask it to read `skills/how-deep-the-rabbit-hole-goes/SKILL.md` and follow it for the audit. To
-update, pull the repository and copy the folder again.
+The destination is the parent directory: the helper adds `how-deep-the-rabbit-hole-goes` beneath it.
+You can also copy that complete folder manually. For a legacy Codex setup using `~/.codex/skills`,
+select its actual directory with `--destination`; the Codex preset uses the current `.agents` layout.
+
+If the agent has no skill discovery, ask it to read the trusted
+`skills/how-deep-the-rabbit-hole-goes/SKILL.md` and follow it for the audit. It still needs access to
+the target files; running the scanner also needs shell access and PowerShell 7. An agent without
+these capabilities must report the resulting coverage gaps. Native plugin support is host-specific;
+the presence of a manifest does not make every agent discover the package automatically.
+
+To update a copied skill, pull the source repository and repeat the same install command with
+`--update`. Existing skill folders are preserved unless you explicitly request that replacement;
+keep any local edits elsewhere before updating. Reload skills or start a new agent session if the
+updated skill does not appear.
 
 ## 🚀 Usage
 
@@ -362,6 +401,7 @@ those from earlier scanner versions. To get the same hash on every machine, clon
 ## 📚 Documentation
 
 - [Scanner usage, examples and output](docs/SCANNER.md)
+- [Agent and operating-system portability, installation and updates](docs/PORTABILITY.md)
 - [Threat catalog: T01–T26](skills/how-deep-the-rabbit-hole-goes/references/threats.md)
 - [Coverage contract and CWE/OWASP map](skills/how-deep-the-rabbit-hole-goes/references/coverage.md)
 - [Reproducible evaluation](tests/how-deep-the-rabbit-hole-goes/EVALUATION.md)
@@ -395,7 +435,7 @@ pwsh -NoProfile -File ./tests/how-deep-the-rabbit-hole-goes/run.ps1
 | New skill | Create it with `scripts/new-skill.ps1 -Name <name> -Description "<what it does and when to use it>"`. Don't add empty placeholder skills. |
 | New scanner rule | An entry in `references/threats.md` and a check in `run.ps1`: the malicious sample is caught and `benign-skill` stays at LOW or below. |
 | Third-party skill | Audit it with how-deep-the-rabbit-hole-goes before adding it. |
-| Change worth shipping | Bump `version` in `.claude-plugin/plugin.json`. |
+| Change worth shipping | Keep the name and version in `plugin.json`, `.codex-plugin/plugin.json` and `.claude-plugin/plugin.json` aligned. |
 
 > [!WARNING]
 > `evil-skill`, `evil-plugin` and `evasion-skill` in the test tree are deliberately malicious samples. Tests

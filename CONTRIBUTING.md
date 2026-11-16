@@ -1,7 +1,7 @@
 # Contributing to instinct
 
-instinct is an experimental skill for auditing agent skills and plugins. It works in any agent that
-loads `SKILL.md` skills and is packaged as a Claude Code plugin. Read the
+instinct is an experimental skill for auditing agent skills and plugins. Keep one shared Agent Skills
+folder, a portable plugin manifest and thin host compatibility manifests. Read the
 [README](README.md), [coverage contract](skills/how-deep-the-rabbit-hole-goes/references/coverage.md)
 and [security policy](SECURITY.md) before proposing a change.
 
@@ -9,10 +9,13 @@ and [security policy](SECURITY.md) before proposing a change.
 
 - Git for the checkout and checkout-integrity tests.
 - PowerShell 7+ (`pwsh`) for the scanner, helper scripts and regression suite.
-- Python 3.10+ for evaluation and corpus/review tests; these use the standard library.
-- Claude Code with plugin support for manual plugin integration checks.
+- Python 3.10+ for the portable installer and evaluation and corpus/review tests; these use the
+  standard library.
+- The relevant host, such as Codex or Claude Code, for manual discovery and integration checks.
 
 Run commands below from the repository root. Windows and Linux are verified so far; macOS is not.
+The CI matrix targets all three operating systems; its configuration alone is not evidence of a
+passing run or native agent integration.
 Include your PowerShell, Python and operating-system versions when reporting results. To check the
 Unix-only probes from Windows, run the suite in WSL with PowerShell for Linux, on the Linux file system
 (not `/mnt/c`).
@@ -21,12 +24,16 @@ Unix-only probes from Windows, run the suite in WSL with PowerShell for Linux, o
 
 ```text
 instinct/
-├── .claude-plugin/        plugin and marketplace manifests
-├── docs/                  standalone scanner guide
+├── plugin.json            portable Agent Plugins manifest
+├── .claude-plugin/        Claude Code compatibility and marketplace manifests
+├── .codex-plugin/         Codex compatibility manifest
+├── AGENTS.md              shared contributor instructions
+├── CLAUDE.md              Claude Code entrypoint for those instructions
+├── docs/                  scanner and portability guides
 ├── skills/                one folder per skill, each with a SKILL.md
 ├── tests/                 inert fixtures, regressions and frozen evaluation data
 ├── templates/             template for a new skill
-└── scripts/               new-skill.ps1 and validate.ps1
+└── scripts/               portable installer, skill scaffolding and validation
 ```
 
 ## Adding or editing a skill
@@ -46,8 +53,32 @@ pwsh -NoProfile -File ./scripts/validate.ps1
 - Keep `SKILL.md` short; put long reference material in `references/`. Do not add placeholder skills.
 - Keep skills agent- and OS-neutral. Describe a step by what it does ("read the file", "run the
   command"), not by one agent's tool name, and name agent-specific files only as examples next to
-  their equivalents. Give commands that work in every shell, or one variant per OS.
+  their equivalents. Resolve bundled scripts relative to the loaded `SKILL.md`, not the checkout or
+  agent's working directory. Give commands that work in every shell, or one variant per OS.
 - Audit any third-party or borrowed skill with `how-deep-the-rabbit-hole-goes` before adding it.
+
+## Changing installation or packaging
+
+Keep shared instructions and scanner logic in `skills/`. Host manifests describe the same package;
+do not fork the skill for each agent or make a scanner invocation depend on an agent-specific tool.
+Keep `name`, `version`, `description` and `license` aligned in `plugin.json`,
+`.codex-plugin/plugin.json` and `.claude-plugin/plugin.json` wherever those fields are present.
+
+The Python installer copies complete skill folders and uses explicit destinations. New host presets
+need a current official discovery-path reference and regression coverage. Preserve existing skills
+unless the user passes `--update`; do not alter global agent settings or install runtimes as a side
+effect. Check both project and user scopes without writing to the real home directory. See
+[PORTABILITY.md](docs/PORTABILITY.md) for the supported installation contract.
+
+Run the portable checks when changing packaging or installation:
+
+```text
+python -B tests/test_portability.py -v
+pwsh -NoProfile -File ./scripts/validate.ps1
+```
+
+Use `py -3` on Windows or `python3` on Unix if that is the available Python 3 command. Verify at least
+one installed copy from a different working directory so checkout-relative assumptions are caught.
 
 ## Changing the scanner
 
@@ -104,8 +135,8 @@ misses, control alerts, errors and unchecked content. See the
   documented read-only examples; keep output excerpts consistent with the current scanner.
 - For documentation-only changes, check links, examples and `git diff --check`; detection suites are
   needed when the corresponding code or fixtures change.
-- Record user-visible changes in [CHANGELOG.md](CHANGELOG.md). Bump `.claude-plugin/plugin.json`
-  for a new package release; unreleased documentation edits do not change the package version.
+- Record user-visible changes in [CHANGELOG.md](CHANGELOG.md). Bump and synchronize all three plugin
+  manifests for a new package release; unreleased documentation edits do not change the package version.
 - Before publishing a package, run `claude plugin validate .`, then install the local marketplace
   in a separate Claude Code test environment and check the documented audit flow.
 - Before public release, verify that GitHub private vulnerability reporting is enabled and the

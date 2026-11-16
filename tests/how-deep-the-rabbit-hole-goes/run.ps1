@@ -8,7 +8,11 @@
 # The Ukrainian text in the samples is intentional: it exercises the scanner's Ukrainian rules.
 param([string]$SecurityReportPath)
 $ErrorActionPreference = 'Stop'
-$scan = Join-Path $PSScriptRoot '../../skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1'
+# scan.ps1 writes -Json reports to a redirected stdout as UTF-8; decode child output the same way
+# instead of with the console code page (866, 437 …). Child pwsh processes share this setting.
+$savedOutputEncoding = [Console]::OutputEncoding
+[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
+$scan =Join-Path $PSScriptRoot '../../skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1'
 $script:failed = 0
 
 function Invoke-Scan([string]$name) {
@@ -87,4 +91,5 @@ Assert ($LASTEXITCODE -eq 0) 'security-regressions: targeted positive, negative 
 
 Write-Host ''
 if ($script:failed) { Write-Host "Failed checks: $script:failed" -ForegroundColor Red } else { Write-Host 'All checks passed.' -ForegroundColor Green }
+[Console]::OutputEncoding = $savedOutputEncoding
 exit $script:failed
