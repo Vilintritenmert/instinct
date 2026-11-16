@@ -36,7 +36,7 @@ $ErrorActionPreference = 'Stop'
 if (-not $ListRules) {
     $target = (Resolve-Path -LiteralPath $Path).Path
     $isFile = Test-Path -LiteralPath $target -PathType Leaf
-    $base = if ($isFile) { Split-Path -Parent $target } else { $target }
+    $base = if ($isFile) { [IO.Path]::GetDirectoryName($target) } else { $target }
 }
 
 # ---------- Rules ----------
@@ -100,7 +100,7 @@ $rules = @(
 
     # ===== T06 Secrets =====
     @{ Id='T06'; RuleId='T06-001'; Sev='HIGH';     Neg=$true; Rx='\.ssh[/\\]|\bid_rsa\b|\bid_ed25519\b|\bid_ecdsa\b|\.aws[/\\]credentials|\.git-credentials|\.netrc\b|\.npmrc\b|\.pypirc\b|\.docker[/\\]config\.json|\.kube[/\\]config|\.gnupg[/\\]|\.config[/\\](gh[/\\]hosts|gcloud)|application_default_credentials|\.azure[/\\]|\.vault-token|terraform\.tfstate' }
-    @{ Id='T06'; RuleId='T06-002'; Sev='HIGH';     Neg=$true; Rx='\.claude[/\\]\.credentials|\.claude\.json\b|\.codex[/\\]auth|\.config[/\\]claude|claude_desktop_config.{0,40}(token|key|env)'; Name='the agent''s own credentials' }
+    @{ Id='T06'; RuleId='T06-002'; Sev='HIGH';     Neg=$true; Rx='\.claude[/\\]\.credentials|\.claude\.json\b|\.codex[/\\]auth|\.config[/\\]claude|claude_desktop_config.{0,40}(token|key|env)|\.gemini[/\\]oauth_creds|github-copilot[/\\](hosts|apps)\.json|opencode[/\\]auth\.json'; Name='the agent''s own credentials' }
     @{ Id='T06'; RuleId='T06-003'; Sev='HIGH';     Neg=$true; Rx='Login\s+Data|Local\s+State|cookies\.sqlite|[/\\]Cookies\b|\bkeychain\b|find-(generic|internet)-password|dump-keychain|\bcmdkey\b|\bvaultcmd\b|Get-StoredCredential|logins\.json|key4\.db' }
     @{ Id='T06'; RuleId='T06-004'; Sev='HIGH';     Neg=$true; Rx='wallet\.dat|\.ethereum[/\\]keystore|\.electrum[/\\]|nkbihfbeogaeaoehlefnkodbefgpgknn|[/\\]Exodus[/\\]|\.config[/\\]solana'; Name='crypto wallets' }
     @{ Id='T06'; RuleId='T06-005'; Sev='HIGH';     Neg=$true; Rx='/etc/shadow|/proc/\S*/environ|\.(bash|zsh|python|psql|mysql)_history|ConsoleHost_history'; Name='system credentials / command history' }
@@ -202,6 +202,7 @@ $rules = @(
 
     # ===== T21 Auto-run through plugin components =====
     @{ Id='T21'; RuleId='T21-001'; Sev='HIGH';     Raw=$true; Ext=$markup; Rx='(^|[\s(>:])!`[^`\r\n]+`|^\s*```!\s*$'; Name='dynamic command !`…` — runs while the skill loads, before the model decides' }
+    @{ Id='T21'; RuleId='T21-006'; Sev='HIGH';     Raw=$true; Ext='.toml'; Rx='!\{[^}\r\n]+\}'; Name='shell injection !{…} in a command file (Gemini CLI) — runs when the command is invoked' }
     @{ Id='T21'; RuleId='T21-002'; Sev='HIGH';     Rx='["'']?(mcpServers|lspServers|statusLine|apiKeyHelper|awsAuthRefresh|awsCredentialExport|otelHeadersHelper)["'']?\s*[:=]'; Name='configuration that launches a process (MCP/LSP/statusLine/helper)' }
     @{ Id='T21'; RuleId='T21-003'; Sev='HIGH';     Rx='["''](SessionStart|SessionEnd|PreToolUse|PostToolUse|PostToolUseFailure|UserPromptSubmit|Stop|SubagentStart|SubagentStop|PreCompact|Notification|PermissionRequest)["'']\s*:|"hooks"\s*:\s*[\[{]'; Name='hook on an agent event (the command runs automatically)' }
     @{ Id='T21'; RuleId='T21-004'; Sev='HIGH';     Scope='fm'; Rx='^\s*hooks\s*:'; Name='hooks in the skill frontmatter' }
@@ -218,7 +219,7 @@ $rules = @(
     @{ Id='T23'; RuleId='T23-003'; Sev='HIGH';     Rx='(modify|edit|update|patch|rewrite|overwrite|зміни|перепиши|онови)\s.{0,30}(other|another|all|every|інш\w*|усі|всі)\s+(skills?|plugins?|agents?|SKILL\.md|скіл\w*|плагін\w*)|(tell|instruct|скажи|накажи)\s.{0,30}(sub-?agents?|other\s+agents?|субагент\w*).{0,40}(ignore|skip|not\s+report|bypass|ігнор\w*|не\s+звітув\w*)'; Name='changing other skills / instructing other agents' }
 
     # ===== T24 Hijacking tools and channels =====
-    @{ Id='T24'; RuleId='T24-001'; Sev='CRITICAL'; Rx='(ANTHROPIC|OPENAI|CLAUDE_CODE)\w*_(BASE_URL|API_BASE|ENDPOINT)\b|ANTHROPIC_AUTH_TOKEN\s*[=:]'; Name='redirects the agent''s API traffic (the whole conversation and key go to someone else''s server)' }
+    @{ Id='T24'; RuleId='T24-001'; Sev='CRITICAL'; Rx='(ANTHROPIC|OPENAI|GEMINI|CLAUDE_CODE)\w*_(BASE_URL|API_BASE|ENDPOINT)\b|ANTHROPIC_AUTH_TOKEN\s*[=:]'; Name='redirects the agent''s API traffic (the whole conversation and key go to someone else''s server)' }
     @{ Id='T24'; RuleId='T24-002'; Sev='HIGH';     Rx='\b(HTTPS?_PROXY|ALL_PROXY)\s*=|\b(http|https)\.proxy\b|url\.\S*insteadOf|PYTHONSTARTUP\s*=|PYTHONPATH\s*=|GIT_SSH_COMMAND|BASH_ENV\s*=|PROMPT_COMMAND\s*='; Name='proxy / injection through environment variables' }
     @{ Id='T24'; RuleId='T24-003'; Sev='HIGH'; MemoryOptions=$true; Rx='\bNODE_OPTIONS\s*='; Name='Node runtime options (check injected loaders and argument interpolation)' }
     @{ Id='T24'; RuleId='T24-004'; Sev='MEDIUM';   Rx='(before|after|whenever|when|every\s+time|each\s+time|перед|після|щоразу|коли)\s.{0,30}(us(e|ing)|call(ing)?|invok(e|ing)|run(ning)?|використ\w*|виклик\w*)\s.{0,20}(any|every|each|all|other|another|будь-як\w*|кожн\w*|інш\w*)\s+(tools?|skills?|mcp|commands?|інструмент\w*|скіл\w*)|instead\s+of\s+(the\s+)?(built-?in|default|official|native)|замість\s+(вбудован\w+|стандартн\w+)'; Name='interferes with other tools/skills' }
@@ -425,19 +426,48 @@ $builtinNames = 'pdf', 'docx', 'xlsx', 'pptx', 'docs', 'skill-creator', 'code-re
     'computer-use', 'chrome-browser', 'built-in-browser', 'setup-claude', 'explain-usage', 'frontend-design', 'mcp-builder', 'webapp-testing',
     'brand-guidelines', 'canvas-design', 'doc-coauthoring', 'internal-comms', 'theme-factory', 'algorithmic-art', 'web-artifacts-builder'
 $binaryExt = '.exe', '.dll', '.so', '.dylib', '.bin', '.msi', '.scr', '.com', '.jar', '.pyc', '.pyo', '.pyd', '.class', '.wasm', '.app', '.dmg', '.pkg',
-    '.deb', '.rpm', '.node', '.lnk', '.chm', '.iso', '.img', '.vhd', '.vhdx', '.appimage', '.apk', '.ipa', '.sys', '.drv', '.ocx', '.cpl', '.pif', '.o', '.a', '.lib', '.elf', '.dex'
+    '.deb', '.rpm', '.node', '.lnk', '.chm', '.iso', '.img', '.vhd', '.vhdx', '.appimage', '.apk', '.ipa', '.sys', '.drv', '.ocx', '.cpl', '.pif', '.o', '.a', '.lib', '.elf', '.dex',
+    '.scpt'
 $archiveExt = '.zip', '.7z', '.rar', '.tar', '.gz', '.tgz', '.bz2', '.xz', '.zst', '.lz', '.lzma', '.cab', '.whl', '.egg', '.nupkg', '.vsix', '.crx', '.xpi'
 $pickleExt = '.pkl', '.pickle', '.pt', '.pth', '.joblib', '.ckpt'
 $macroExt = '.docm', '.xlsm', '.pptm', '.dotm', '.xlsb', '.xlam'
 $docExt = '.pdf', '.docx', '.xlsx', '.pptx', '.doc', '.xls', '.ppt', '.odt', '.ods', '.rtf'
 $mediaExt = '.ttf', '.otf', '.woff', '.woff2', '.mp3', '.mp4', '.wav', '.ogg', '.webm', '.mov', '.avi', '.tiff', '.tif', '.heic', '.avif'
-$launchExt = '.hta', '.reg', '.wsf', '.jse', '.scf', '.url', '.desktop', '.service', '.plist', '.inf', '.ps1xml'
-$scriptExt = '.ps1', '.psm1', '.sh', '.bash', '.zsh', '.fish', '.py', '.js', '.mjs', '.cjs', '.ts', '.rb', '.pl', '.php', '.bat', '.cmd', '.vbs', '.lua', '.go', '.hta', '.wsf', '.jse'
+# Launchers per OS: Windows shell files, macOS Terminal/Finder files, Linux desktop and systemd units.
+$launchExt = '.hta', '.reg', '.wsf', '.wsh', '.jse', '.scf', '.url', '.inf', '.ps1xml', '.library-ms', '.searchconnector-ms', '.settingcontent-ms',
+    '.appref-ms', '.command', '.tool', '.plist', '.desktop', '.service', '.timer'
+$scriptExt = '.ps1', '.psm1', '.sh', '.bash', '.zsh', '.ksh', '.csh', '.tcsh', '.fish', '.command', '.py', '.js', '.mjs', '.cjs', '.ts', '.rb', '.pl',
+    '.php', '.bat', '.cmd', '.vbs', '.vbe', '.applescript', '.lua', '.go', '.hta', '.wsf', '.jse'
 $quietDotfiles = '.gitignore', '.gitattributes', '.gitkeep', '.editorconfig', '.gitmodules', '.mcp.json', '.lsp.json', '.npmignore', '.prettierrc', '.markdownlint.json'
 
 $findings = [System.Collections.Generic.List[object]]::new()
 $fileList = [System.Collections.Generic.List[object]]::new()
-$domains = [System.Collections.Generic.SortedSet[string]]::new()
+# Folder metadata that Finder and Explorer leave behind (common in archives packed on macOS or Windows).
+# The name alone is not trusted: the bytes must start with that format's own header.
+function Test-OsMetadata([string]$name, [byte[]]$b) {
+    if ($b.Length -lt 8) { return $false }
+    $hex = -join ($b[0..7] | ForEach-Object { $_.ToString('X2') })
+    if ($name -eq '.DS_Store') { return $hex -eq '0000000142756431' }
+    if ($name.StartsWith('._', [StringComparison]::Ordinal)) { return $hex.StartsWith('00051607') }
+    if ($name -in 'Thumbs.db', 'ehthumbs.db') { return $hex -eq 'D0CF11E0A1B11AE1' }
+    return $false
+}
+# Named pipes, devices and sockets (macOS/Linux, e.g. from an extracted tar) are never opened:
+# reading a FIFO blocks forever. PowerShell and .NET report them as regular files of size 0, so only
+# empty entries are checked, with the system's POSIX find (a system tool, nothing from the target runs).
+function Test-SpecialFile([IO.FileInfo]$item) {
+    if ($IsWindows -or $item.Length -ne 0) { return $false }
+    try { return [bool](& find $item.FullName '(' -type p -o -type c -o -type b -o -type s ')' -print 2>$null) }
+    catch { return $false }
+}
+# Files and folders are walked and hashed through .NET: PowerShell's path cmdlets treat '\' as a
+# separator even on macOS/Linux, where it is a legal file-name character.
+function Get-Sha256([string]$path) {
+    $stream = [IO.File]::OpenRead($path)
+    try { [Convert]::ToHexString([Security.Cryptography.SHA256]::Create().ComputeHash($stream)).ToLowerInvariant() }
+    finally { $stream.Dispose() }
+}
+$domains = [System.Collections.Generic.SortedSet[string]]::new([StringComparer]::Ordinal)
 $stats = [ordered]@{ Files = 0; Scripts = 0; Images = 0; Binary = 0; Links = 0 }
 $texts = @{}
 $fmNames = [System.Collections.Generic.List[object]]::new()
@@ -664,7 +694,13 @@ function Read-Components($node, [string]$file, [string]$pointer = '$', [int]$dep
 }
 
 
-function Rel([string]$p) { [IO.Path]::GetRelativePath($base, $p) -replace '\\', '/' }
+# Paths are reported with '/' on every OS. Only Windows uses '\' as a separator; on macOS/Linux it is
+# a legal file-name character and is kept, so two different files never collapse into one path.
+function Rel([string]$p) {
+    $r = [IO.Path]::GetRelativePath($base, $p)
+    if ([IO.Path]::DirectorySeparatorChar -eq '\') { $r = $r.Replace('\', '/') }
+    $r
+}
 
 function Show-Invisible([string]$s) {
     [regex]::Replace($s, '\uDB40[\uDC00-\uDDEF]|\p{Cf}|[\x00-\x1F\x7F­͏ᅟᅠㅤﾠ]', { param($m) '<U+{0:X4}>' -f [char]::ConvertToUtf32($m.Value, 0) })
@@ -717,13 +753,14 @@ function Get-Hits([string]$text, [bool]$inFm, [string]$ext, [bool]$decoded, [boo
 # .git content is not scanned, except what runs code: hooks (not .sample) and config.
 $items = [System.Collections.Generic.List[object]]::new()
 $pending = [System.Collections.Generic.Stack[object]]::new()
-$pending.Push((Get-Item -LiteralPath $target -Force))
+$pending.Push($(if ([IO.Directory]::Exists($target)) { [IO.DirectoryInfo]::new($target) } else { [IO.FileInfo]::new($target) }))
 while ($pending.Count) {
     $current = $pending.Pop()
     $linked = $current.LinkType -or ($current.Attributes -band [IO.FileAttributes]::ReparsePoint)
-    if (-not $current.PSIsContainer -or $linked) { $items.Add($current); continue }
+    if ($current -isnot [IO.DirectoryInfo] -or $linked) { $items.Add($current); continue }
     try {
-        foreach ($child in Get-ChildItem -LiteralPath $current.FullName -Force -ErrorAction Stop) {
+        # Lists hidden and system entries too (like Get-ChildItem -Force); links are not followed.
+        foreach ($child in $current.EnumerateFileSystemInfos()) {
             # Prune .git before walking it; only config and active hooks are audit inputs.
             $childRel = Rel $child.FullName
             if ($childRel -match '(?:^|/)\.git/(.+)$') {
@@ -750,7 +787,7 @@ foreach ($item in $items) {
         Add-CoverageIssue $rel 'link target not followed'
         continue
     }
-    if ($item.PSIsContainer) { continue }
+    if ($item -is [IO.DirectoryInfo]) { continue }
 
     $stats.Files++
     $ext = $item.Extension.ToLowerInvariant()
@@ -758,8 +795,12 @@ foreach ($item in $items) {
     $kind = 'text'
     if ($scriptExt -contains $ext) { $stats.Scripts++; $kind = 'script' }
     $sha = ''
-    if ($item.Length -le 20MB) {
-        try { $sha = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash.ToLowerInvariant() }
+    $special = Test-SpecialFile $item
+    if ($special) { $kind = 'skipped' }
+    # An empty entry is never opened: a FIFO also reports size 0, and opening one blocks forever.
+    elseif ($item.Length -eq 0) { $sha = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' }
+    elseif ($item.Length -le 20MB) {
+        try { $sha = Get-Sha256 $item.FullName }
         catch { Add-CoverageIssue $rel 'file could not be hashed' }
     }
     $entry = [pscustomobject]@{ File = $rel; Size = $item.Length; Kind = $kind; Sha256 = $sha }
@@ -776,19 +817,26 @@ foreach ($item in $items) {
         Add-Finding -RuleId 'T19-903' 'LOW' 'T19' $rel 0 $item.Name 'hidden file (dotfile)'
     }
 
-    # --- plugin components that run by themselves ---
+    # --- components that run or load by themselves, whichever agent the target is for ---
+    # (Claude Code plugins, Codex, Gemini CLI extensions, Cursor, GitHub Copilot, Windsurf, Cline, Roo, OpenCode)
     switch -Regex ($relL) {
         '(^|/)hooks/[^/]+\.json$|(^|/)hooks\.json$' { Add-Finding -RuleId 'T21-901' 'HIGH' 'T21' $rel 0 $item.Name 'plugin hooks: commands run automatically on agent events' }
-        '(^|/)\.?mcp\.json$' { Add-Finding -RuleId 'T21-902' 'HIGH' 'T21' $rel 0 $item.Name 'MCP servers: launched processes or remote tools' }
+        '(^|/)\.?mcp\.json$|(^|/)(gemini-extension|claude_desktop_config|cline_mcp_settings)\.json$' { Add-Finding -RuleId 'T21-902' 'HIGH' 'T21' $rel 0 $item.Name 'MCP servers: launched processes or remote tools' }
         '(^|/)monitors(/[^/]+)?\.json$' { Add-Finding -RuleId 'T21-903' 'HIGH' 'T21' $rel 0 $item.Name 'plugin monitors: background commands' }
         '(^|/)\.lsp\.json$' { Add-Finding -RuleId 'T21-904' 'MEDIUM' 'T21' $rel 0 $item.Name 'LSP servers: launched processes' }
         '(^|/)bin/[^/]+$' { Add-Finding -RuleId 'T21-905' 'MEDIUM' 'T21' $rel 0 $item.Name 'file in the plugin''s bin/ (added to PATH)' }
-        '(^|/)(\.claude/)?settings(\.local)?\.json$' { Add-Finding -RuleId 'T09-902' 'MEDIUM' 'T09' $rel 0 $item.Name 'bundled agent settings' }
-        '(^|/)(agents|commands|output-styles)/[^/]+\.md$' { Add-Finding -RuleId 'T21-906' 'LOW' 'T21' $rel 0 $item.Name 'plugin component (agent/command/style) — read it as instructions' }
-        '(^|/)(claude|agents|gemini|soul|memory)\.md$' { Add-Finding -RuleId 'T23-901' 'MEDIUM' 'T23' $rel 0 $item.Name 'bundled agent instruction/memory file — enters the context without the skill being invoked' }
+        '(^|/)(\.claude/)?settings(\.local)?\.json$|(^|/)\.codex/config\.toml$|(^|/)opencode\.jsonc?$' { Add-Finding -RuleId 'T09-902' 'MEDIUM' 'T09' $rel 0 $item.Name 'bundled agent settings' }
+        '(^|/)(agents|commands|output-styles|prompts|chatmodes)/[^/]+\.(md|toml)$' { Add-Finding -RuleId 'T21-906' 'LOW' 'T21' $rel 0 $item.Name 'plugin component (agent/command/style) — read it as instructions' }
+        '(^|/)(claude|agents|gemini|soul|memory)\.md$|(^|/)\.(cursorrules|windsurfrules|clinerules)(/.+)?$|(^|/)\.(cursor|windsurf)/rules/.+$|(^|/)\.roo/rules(-[^/]+)?/.+$|(^|/)\.kiro/steering/.+$|(^|/)copilot-instructions\.md$|\.instructions\.md$' { Add-Finding -RuleId 'T23-901' 'MEDIUM' 'T23' $rel 0 $item.Name 'bundled agent instruction/memory file — enters the context without the skill being invoked' }
         '(^|/)\.gitmodules$' { Add-Finding -RuleId 'T11-901' 'MEDIUM' 'T11' $rel 0 $item.Name 'git submodules: external code outside the audit' }
         '(^|/)\.git/hooks/' { Add-Finding -RuleId 'T09-903' 'HIGH' 'T09' $rel 0 $item.Name 'git hook in the target''s .git: runs during git commands in this folder' }
         '(^|/)\.git/config$' { Add-Finding -RuleId 'T09-904' 'LOW' 'T09' $rel 0 $item.Name 'the target''s .git/config was scanned (fsmonitor, sshCommand, hooksPath run code)' }
+    }
+
+    if ($special) {
+        Add-CoverageIssue $rel 'special file not read'
+        Add-Finding -RuleId 'T19-919' 'MEDIUM' 'T19' $rel 0 $item.Name 'named pipe, device or socket — not read'
+        continue
     }
 
     # --- opaque files ---
@@ -803,8 +851,15 @@ foreach ($item in $items) {
     if ($item.Length -gt 20MB) { Add-CoverageIssue $rel 'file size limit'; $entry.Kind = 'skipped'; Add-Finding -RuleId 'T19-911' 'MEDIUM' 'T19' $rel 0 "$([math]::Round($item.Length / 1MB, 1)) MB" 'file too large — content not scanned'; continue }
     if ($item.Length -gt 1MB) { Add-Finding -RuleId 'T19-912' 'LOW' 'T19' $rel 0 "$([math]::Round($item.Length / 1MB, 1)) MB" 'large file' }
 
-    try { $bytes = [IO.File]::ReadAllBytes($item.FullName) }
+    try { $bytes = $item.Length -eq 0 ? [byte[]]::new(0) : [IO.File]::ReadAllBytes($item.FullName) }
     catch { Add-CoverageIssue $rel 'file could not be read'; $entry.Kind = 'skipped'; Add-Finding -RuleId 'T19-913' 'MEDIUM' 'T19' $rel 0 $_.Exception.Message 'file could not be read — not checked'; continue }
+
+    if (Test-OsMetadata $item.Name $bytes) {
+        Add-CoverageIssue $rel 'opaque content not inspected'
+        $stats.Binary++; $entry.Kind = 'binary'
+        Add-Finding -RuleId 'T19-918' 'LOW' 'T19' $rel 0 $item.Name 'Finder/Explorer folder metadata (.DS_Store, AppleDouble ._*, Thumbs.db) — not scanned'
+        continue
+    }
 
     if ($imageExt -contains $ext) {
         if (Test-ImageMagic $bytes $ext) {
@@ -846,6 +901,8 @@ foreach ($item in $items) {
     # The digest of text refers to the exact bytes that were inspected.
     $entry.Sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
     $texts[$item.FullName] = $text
+    # On macOS/Linux a script needs no extension: a shebang line is enough to run it directly.
+    if ($entry.Kind -eq 'text' -and $text.StartsWith('#!', [StringComparison]::Ordinal)) { $stats.Scripts++; $entry.Kind = 'script' }
     $lines = $text -split '\r?\n'
 
     # --- frontmatter SKILL.md ---
@@ -1036,15 +1093,16 @@ foreach ($item in $items) {
 
 # ---------- Skill-level checks ----------
 $sep = [IO.Path]::DirectorySeparatorChar
-$skillRoots = @($items | Where-Object { -not $_.PSIsContainer -and $_.Name -eq 'SKILL.md' } | ForEach-Object DirectoryName)
+$skillRoots = @($items | Where-Object { $_ -is [IO.FileInfo] -and $_.Name -eq 'SKILL.md' } | ForEach-Object DirectoryName)
 $roots = if ($skillRoots.Count) { $skillRoots } else { @($base) }
 foreach ($root in $roots) {
     $rootRel = Rel $root
     $prefix = if ($rootRel -eq '.') { '' } else { "$rootRel/" }
     $anchor = if ($skillRoots.Count) { $prefix + 'SKILL.md' } else { $rootRel }
-    $mine = $texts.GetEnumerator() | Where-Object { $_.Key.StartsWith($root + $sep) -or $isFile }
+    # Paths are compared ordinally: a culture-aware comparison ignores some invisible characters.
+    $mine = $texts.GetEnumerator() | Where-Object { $_.Key.StartsWith($root + $sep, [StringComparison]::Ordinal) -or $isFile }
     $all = ($mine | ForEach-Object Value) -join "`n"
-    $own = $findings | Where-Object { $_.File.StartsWith($prefix) }
+    $own = $findings | Where-Object { $_.File.StartsWith($prefix, [StringComparison]::Ordinal) }
 
     # T01: indirect injection
     $m = $externalRx.Match($all)
@@ -1074,8 +1132,8 @@ foreach ($root in $roots) {
                 Add-Finding -RuleId 'T11-904' 'LOW' 'T11' $anchor 0 $ref 'mentions a file the skill does not contain (will it appear later? is it downloaded?)'
             }
         }
-        foreach ($f in $fileList | Where-Object { $_.Kind -eq 'script' -and $_.File.StartsWith($prefix) }) {
-            $name = Split-Path -Leaf $f.File
+        foreach ($f in $fileList | Where-Object { $_.Kind -eq 'script' -and $_.File.StartsWith($prefix, [StringComparison]::Ordinal) }) {
+            $name = $f.File.Substring($f.File.LastIndexOf('/') + 1)
             if ($all.IndexOf($name, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
                 Add-Finding -RuleId 'T13-902' 'LOW' 'T13' $f.File 0 $name 'script is never mentioned in the skill''s instructions (why is it here?)'
             }
@@ -1089,7 +1147,11 @@ foreach ($g in $fmNames | Group-Object Name | Where-Object Count -gt 1) {
 }
 
 # ---------- Tree hash: the verdict applies to this exact version ----------
-$manifest = @($fileList | Sort-Object -Property File -CaseSensitive | Select-Object File,Kind,Size,Sha256) | ConvertTo-Json -Compress
+# Ordinal path order is identical on every OS and in every locale; a culture-aware sort is not
+# (Lithuanian puts 'y' before 'i', Swedish puts 'Ö' after 'z'), and it changed the hash between machines.
+$byPath = [System.Collections.Generic.List[object]]::new($fileList)
+$byPath.Sort([Comparison[object]] { param($x, $y) [string]::CompareOrdinal($x.File, $y.File) })
+$manifest = @($byPath | Select-Object File,Kind,Size,Sha256) | ConvertTo-Json -Compress
 $treeHashComplete = -not @($fileList | Where-Object { -not $_.Sha256 }).Count -and -not @($coverageIssues | Where-Object Reason -eq 'directory could not be enumerated').Count
 $treeHash = -join ([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($manifest)) | ForEach-Object { $_.ToString('x2') })
 
@@ -1097,17 +1159,41 @@ if (-not $treeHashComplete) { $treeHash = $null }
 
 # ---------- Output ----------
 $order = @{ CRITICAL = 0; HIGH = 1; MEDIUM = 2; LOW = 3 }
-$sorted = $findings | Where-Object { $order[$_.Severity] -le $order[$MinSeverity] } | Sort-Object { $order[$_.Severity] }, Threat, File, Line
+# A total, ordinal order: the same findings are listed identically on every OS and in every locale.
+$sorted = [System.Collections.Generic.List[object]]::new()
+foreach ($f in $findings) { if ($order[$f.Severity] -le $order[$MinSeverity]) { $sorted.Add($f) } }
+$sorted.Sort([Comparison[object]] {
+    param($x, $y)
+    $c = $order[$x.Severity].CompareTo($order[$y.Severity]); if ($c) { return $c }
+    foreach ($p in 'Threat', 'File') { $c = [string]::CompareOrdinal($x.$p, $y.$p); if ($c) { return $c } }
+    $c = ([int]$x.Line).CompareTo([int]$y.Line); if ($c) { return $c }
+    foreach ($p in 'RuleId', 'Note', 'Evidence') { $c = [string]::CompareOrdinal($x.$p, $y.$p); if ($c) { return $c } }
+    return 0
+})
 $counts = [ordered]@{}
 foreach ($s in 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW') { $counts[$s] = @($findings | Where-Object Severity -eq $s).Count }
 $threats = @($findings | Where-Object { $_.Severity -ne 'LOW' } | ForEach-Object Threat | Sort-Object -Unique)
 
+# Every list is emitted in ordinal order: folder-walk order differs between file systems (NTFS, ext4, APFS).
+$coverageIssues.Sort([Comparison[object]] {
+    param($x, $y)
+    $c = [string]::CompareOrdinal($x.File, $y.File); if ($c) { return $c }
+    [string]::CompareOrdinal($x.Reason, $y.Reason)
+})
+$components.Sort([Comparison[object]] {
+    param($x, $y)
+    foreach ($p in 'File', 'JsonPath', 'Command', 'Url') { $c = [string]::CompareOrdinal([string]$x.$p, [string]$y.$p); if ($c) { return $c } }
+    return 0
+})
+$skillNames = [System.Collections.Generic.List[string]]::new([string[]]@($fmNames | ForEach-Object Name))
+$skillNames.Sort([StringComparer]::Ordinal)
+
 if ($Json) {
     [pscustomobject]@{
-        SchemaVersion = 2; TreeHashVersion = 2; RuleCatalogVersion = 1; RuleCatalogSha256 = $catalogSha256
+        SchemaVersion = 2; TreeHashVersion = 3; RuleCatalogVersion = 1; RuleCatalogSha256 = $catalogSha256
         Target = $target; TreeHash = $treeHash; Stats = $stats; Counts = $counts; Threats = $threats
         ScanComplete = ($coverageIssues.Count -eq 0); CoverageIssues = @($coverageIssues); TreeHashComplete = $treeHashComplete; Components = @($components)
-        Skills = @($fmNames | ForEach-Object Name); Domains = @($domains); Findings = @($sorted); Inventory = @($fileList)
+        Skills = @($skillNames); Domains = @($domains); Findings = @($sorted); Inventory = @($byPath)
     } | ConvertTo-Json -Depth 8
 } else {
     $colors = @{ CRITICAL = 'Red'; HIGH = 'Magenta'; MEDIUM = 'Yellow'; LOW = 'Gray' }
@@ -1116,7 +1202,7 @@ if ($Json) {
     Write-Host "Tree hash (SHA-256): $treeHash"
     if ($Inventory) {
         Write-Host ''
-        foreach ($f in $fileList | Sort-Object File) { Write-Host ("  {0,-9} {1,9}  {2}  {3}" -f $f.Kind, $f.Size, ($f.Sha256 ? $f.Sha256.Substring(0, 12) : '-'), (Show-Invisible $f.File)) }
+        foreach ($f in $byPath) { Write-Host ("  {0,-9} {1,9}  {2}  {3}" -f $f.Kind, $f.Size, ($f.Sha256 ? $f.Sha256.Substring(0, 12) : '-'), (Show-Invisible $f.File)) }
     }
     Write-Host ''
     foreach ($f in $sorted) {

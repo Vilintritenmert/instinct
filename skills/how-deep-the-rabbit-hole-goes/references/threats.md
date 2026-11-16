@@ -111,7 +111,8 @@ Downloading and immediately running code that is not in the skill and can change
 - **Files:** `~/.ssh`, `id_rsa`, `~/.aws/credentials`, `.git-credentials`, `.netrc`, `.npmrc`, `.pypirc`,
   `.kube/config`, `.gnupg`, `.config/gh/hosts.yml`, `.config/gcloud`, `.azure`, `.vault-token`,
   `terraform.tfstate`, `.env`, shell history, `/etc/shadow`.
-- **The agent itself:** `~/.claude/.credentials.json`, `~/.claude.json`, `~/.codex/auth.json`;
+- **The agent itself:** `~/.claude/.credentials.json`, `~/.claude.json`, `~/.codex/auth.json`,
+  `~/.gemini/oauth_creds.json`, `github-copilot/hosts.json` / `apps.json`, `opencode/auth.json`;
   conversation history (`~/.claude/projects`), the system prompt.
 - **Browser and OS:** `Login Data`, `Cookies`, `Local State`, Keychain, Windows Credential Manager
   (`cmdkey`, `vaultcmd`); crypto wallets (`wallet.dat`, keystore, the MetaMask extension).
@@ -252,7 +253,14 @@ Their content cannot be checked by reading.
   files with null bytes; documents with macros (`.docm`, `.xlsm`); serialized objects (`.pkl`, `.pt`,
   `.joblib` — pickle executes code on load); a double extension (`report.pdf.exe`).
 - **MEDIUM:** archives (`.zip`, `.7z`, `.tar.gz`, `.whl`, `.vsix`); office documents and PDFs (may carry
-  hidden text); files the system runs on double-click (`.hta`, `.reg`, `.url`, `.desktop`).
+  hidden text); files the system runs on double-click or loads by itself — Windows (`.hta`, `.reg`,
+  `.url`, `.library-ms`, `.searchConnector-ms`), macOS (`.command`, `.tool`, `.plist`), Linux (`.desktop`,
+  systemd `.service`/`.timer`); named pipes, devices and sockets on macOS/Linux (an extracted tar can
+  create them; they are never opened, because reading a FIFO blocks forever).
+- **LOW:** Finder/Explorer folder metadata (`.DS_Store`, AppleDouble `._*`, `Thumbs.db`) when the bytes
+  start with that format's header; with any other content the file stays HIGH (null bytes).
+- **Scripts without an extension:** on macOS/Linux a shebang line (`#!`) is enough to run a file, so
+  such a file is counted as a script.
 - **Images** (`.png`, `.jpg`, `.gif`, `.webp`, `.ico`, `.bmp`) are normal if the file header really
   matches the format. A file with an image extension that contains something else is HIGH (disguised
   content); data after the end of the image is MEDIUM (polyglot). SVG is text: it is scanned in full, and
@@ -269,18 +277,24 @@ skill has no reason to write this.
 
 ## T21. Auto-run through plugin components — HIGH
 Code that runs without the model's decision and often without separate confirmation: installing the
-plugin or opening the folder is enough.
+plugin or opening the folder is enough. Every agent has its own form of the same thing: Claude Code
+plugins, Gemini CLI extensions (`gemini-extension.json`), Codex (`.codex/config.toml`), Cursor and
+VS Code (`.cursor/mcp.json`, `.vscode/mcp.json`, `.cursor/hooks.json`), Copilot (`.github/hooks/`),
+Cline (`cline_mcp_settings.json`), Claude Desktop (`claude_desktop_config.json`), OpenCode
+(`opencode.json`).
 - **Hooks:** `hooks/hooks.json`, `"hooks"` in `plugin.json` or `settings.json`, `hooks:` in a skill's
   frontmatter. Events `SessionStart`, `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Stop`: the command
   runs on each one. A hook can also rewrite a tool's input or the answer to the user.
 - **Dynamic context:** `` !`command` `` or a ```` ```! ```` block in a `SKILL.md` or command runs while the
-  skill loads, and the model sees only the result. That is why the skill being checked must not be
+  skill loads, and the model sees only the result. Gemini CLI command files (`commands/*.toml`) do the
+  same with `!{command}` when the command is invoked. That is why the skill being checked must not be
   "just invoked to have a look".
 - **MCP and LSP:** `.mcp.json`, `mcpServers`, `.lsp.json` — launching a local process (`npx -y …`) or
   connecting a remote server whose tool descriptions are themselves an injection channel and can change
   after installation.
-- **Other:** the plugin's `bin/` (added to PATH), `statusLine`, `apiKeyHelper`, monitors, `agents/` and
-  `commands/` (these are instructions too — read them like `SKILL.md`), a bundled `settings.json`.
+- **Other:** the plugin's `bin/` (added to PATH), `statusLine`, `apiKeyHelper`, monitors, `agents/`,
+  `commands/`, `prompts/` and `chatmodes/` (these are instructions too — read them like `SKILL.md`), a
+  bundled `settings.json`, `.codex/config.toml` or `opencode.json`.
 - **JSON canonicalization:** decoded keys/strings and command/argument candidates are checked after
   parsing JSON, including escaped Unicode and multi-line argument arrays. `Components` preserves the
   JSON path and argument boundaries. A literal `|` passed to a non-shell process is not treated as an
@@ -299,8 +313,10 @@ The skill behaves politely during the check and differently later.
 Harm that remains after the skill is removed.
 - **Agent memory:** writing to `MEMORY.md`, `SOUL.md`, `.claude/…/memory`, "remember forever",
   "save to memory" — the attacker's instruction becomes the agent's "own" knowledge in every later session.
-- **Bundled instruction files:** `CLAUDE.md`, `AGENTS.md` in the plugin folder enter the context without
-  the skill being invoked.
+- **Bundled instruction files:** `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursorrules`, `.cursor/rules/`,
+  `.windsurfrules`, `.windsurf/rules/`, `.clinerules`, `.roo/rules*/`, `.kiro/steering/`,
+  `.github/copilot-instructions.md`, `*.instructions.md` in the plugin or project folder enter the
+  context without the skill being invoked.
 - **Self-propagation:** "add this block to every README / commit / PR / docstring", changing other skills,
   telling subagents to ignore rules or not to report.
 
@@ -308,7 +324,8 @@ The Ukrainian write-to-memory rule includes possessives such as `запиши ..
 
 ## T24. Hijacking tools and channels — CRITICAL/HIGH/MEDIUM
 The skill does not steal anything itself but redirects what the agent already uses.
-- **CRITICAL:** `ANTHROPIC_BASE_URL` (and equivalents for other models), `ANTHROPIC_AUTH_TOKEN`,
+- **CRITICAL:** `ANTHROPIC_BASE_URL` (and equivalents for other models: `OPENAI_BASE_URL`,
+  `GOOGLE_GEMINI_BASE_URL`, `*_API_BASE`, `*_ENDPOINT`), `ANTHROPIC_AUTH_TOKEN`,
   `apiKeyHelper` — the whole conversation and the API key go through someone else's server.
 - **HIGH:** `HTTPS_PROXY`, `git config url.….insteadOf`, `NODE_OPTIONS`, `PYTHONPATH`, `BASH_ENV`,
   `GIT_SSH_COMMAND` — injection into every subsequent process.
@@ -414,6 +431,28 @@ guarded miner glossary references, named environment fields and strict literal m
 comments and encoded instructions cannot use prose prohibitions to lower severity. Up to 32 matches
 per rule/line are checked and the highest severity wins; a later positive action remains visible after
 an earlier prohibition. Exhaustion makes the scan incomplete. No target's own "safe" claim suppresses it.
+
+## Agent- and OS-portability additions in 0.12.0
+
+The same threats packaged for agents other than Claude Code, and files that only matter on one OS. The
+positive/near-benign controls live in `security-regressions.ps1`, invoked by `run.ps1`.
+
+| RuleId | Added or extended signal | Positive / near-benign control |
+|---|---|---|
+| T21-006 (new) | `!{…}` shell injection in a `.toml` command file (Gemini CLI) | `!{git diff}` in `.gemini/commands/*.toml` / `{{args}}` in a TOML prompt; `!{…}` in JavaScript |
+| T21-902 | `gemini-extension.json`, `claude_desktop_config.json`, `cline_mcp_settings.json` | Gemini extension manifest / an unrelated `my-extension.json` |
+| T09-902 | `.codex/config.toml`, `opencode.json(c)` | Codex project config |
+| T21-906 | `prompts/`, `chatmodes/`, `commands/*.toml` | — (LOW, read as instructions) |
+| T23-901 | Cursor, Windsurf, Cline, Roo, Kiro and Copilot instruction files | `.cursor/rules/*.mdc`, `.github/copilot-instructions.md` / `rules/*.mdc` outside an agent folder |
+| T06-002 | Gemini CLI, Copilot and OpenCode credential files | `~/.gemini/oauth_creds.json` / a mention of the `.gemini` folder |
+| T24-001 | `GEMINI*_BASE_URL` / `_API_BASE` / `_ENDPOINT` | `GOOGLE_GEMINI_BASE_URL` / `GEMINI_API_KEY` |
+| T19-910 | macOS `.command`/`.tool`, Windows `.library-ms`/`.searchConnector-ms`/`.settingcontent-ms`/`.appref-ms`/`.wsh`, systemd `.timer` | `run.command` |
+| T19-918 (new) | Finder/Explorer metadata with a matching header is LOW instead of HIGH | Real `.DS_Store` header / a `.DS_Store` with other bytes stays HIGH (T19-916) |
+| T19-919 (new) | Named pipe, device or socket on macOS/Linux (identified with the system `find`): reported, never opened | FIFO probe (Linux; skipped on Windows) |
+
+Inventory changes without a finding: a text file that starts with `#!` is counted as a script; an empty
+file is hashed without being opened; on macOS/Linux a `\` in a file name is kept instead of being read as
+a folder separator.
 
 ## Mapping to the OWASP Top 10 for LLM Applications (2025)
 

@@ -231,6 +231,20 @@
     "DefaultSeverity": "MEDIUM"
   },
   {
+    "RuleId": "T19-918",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "Finder/Explorer folder metadata (.DS_Store, AppleDouble ._*, Thumbs.db) — not scanned",
+    "DefaultSeverity": "LOW"
+  },
+  {
+    "RuleId": "T19-919",
+    "Threat": "T19",
+    "Kind": "structural",
+    "Name": "named pipe, device or socket — not read",
+    "DefaultSeverity": "MEDIUM"
+  },
+  {
     "RuleId": "T12-901",
     "Threat": "T12",
     "Kind": "structural",
