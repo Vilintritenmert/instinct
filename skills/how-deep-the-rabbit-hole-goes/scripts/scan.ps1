@@ -33,6 +33,13 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# PowerShell 7.0 uses .NET Core 3.1, before SHA256.HashData and Convert.ToHexString.
+# Keep the byte representation identical on every supported runtime.
+function Get-BytesSha256([byte[]]$bytes) {
+    $hash = [Security.Cryptography.SHA256]::Create()
+    try { [BitConverter]::ToString($hash.ComputeHash($bytes)).Replace('-', '').ToLowerInvariant() }
+    finally { $hash.Dispose() }
+}
 if (-not $ListRules) {
     $target = (Resolve-Path -LiteralPath $Path).Path
     $isFile = Test-Path -LiteralPath $target -PathType Leaf
@@ -314,7 +321,7 @@ foreach ($entry in $catalogRules) {
     $catalogById[$entry.RuleId]=$entry
 }
 $catalogJson = ConvertTo-Json -InputObject @($catalogRules) -Depth 6 -Compress
-$catalogSha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($catalogJson))).ToLowerInvariant()
+$catalogSha256 = Get-BytesSha256 ([Text.Encoding]::UTF8.GetBytes($catalogJson))
 if ($ListRules) {
     [pscustomobject]@{ RuleCatalogVersion=1; RuleCatalogSha256=$catalogSha256; Rules=@($catalogRules) } | ConvertTo-Json -Depth 6
     exit 0
@@ -464,8 +471,9 @@ function Test-SpecialFile([IO.FileInfo]$item) {
 # separator even on macOS/Linux, where it is a legal file-name character.
 function Get-Sha256([string]$path) {
     $stream = [IO.File]::OpenRead($path)
-    try { [Convert]::ToHexString([Security.Cryptography.SHA256]::Create().ComputeHash($stream)).ToLowerInvariant() }
-    finally { $stream.Dispose() }
+    $hash = [Security.Cryptography.SHA256]::Create()
+    try { [BitConverter]::ToString($hash.ComputeHash($stream)).Replace('-', '').ToLowerInvariant() }
+    finally { $hash.Dispose(); $stream.Dispose() }
 }
 $domains = [System.Collections.Generic.SortedSet[string]]::new([StringComparer]::Ordinal)
 $stats = [ordered]@{ Files = 0; Scripts = 0; Images = 0; Binary = 0; Links = 0 }
@@ -782,7 +790,7 @@ foreach ($item in $items) {
         $stats.Links++
         Add-Finding -RuleId 'T17-901' 'HIGH' 'T17' $rel 0 "-> $($item.Target)" 'symlink (where does it lead?)'
         $linkText = [string]::Join('|', @($item.Target))
-        $linkHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($linkText))).ToLowerInvariant()
+        $linkHash = Get-BytesSha256 ([Text.Encoding]::UTF8.GetBytes($linkText))
         $fileList.Add([pscustomobject]@{ File = $rel; Size = 0; Kind = 'link'; Sha256 = $linkHash; LinkTarget = $linkText })
         Add-CoverageIssue $rel 'link target not followed'
         continue
@@ -899,7 +907,7 @@ foreach ($item in $items) {
         $entry.Kind='skipped'; Add-Finding -RuleId 'T19-917' 'MEDIUM' 'T19' $rel 0 '' 'invalid or unsupported text encoding — content not checked'; continue
     }
     # The digest of text refers to the exact bytes that were inspected.
-    $entry.Sha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+    $entry.Sha256 = Get-BytesSha256 $bytes
     $texts[$item.FullName] = $text
     # On macOS/Linux a script needs no extension: a shebang line is enough to run it directly.
     if ($entry.Kind -eq 'text' -and $text.StartsWith('#!', [StringComparison]::Ordinal)) { $stats.Scripts++; $entry.Kind = 'script' }
@@ -1153,7 +1161,7 @@ $byPath = [System.Collections.Generic.List[object]]::new($fileList)
 $byPath.Sort([Comparison[object]] { param($x, $y) [string]::CompareOrdinal($x.File, $y.File) })
 $manifest = @($byPath | Select-Object File,Kind,Size,Sha256) | ConvertTo-Json -Compress
 $treeHashComplete = -not @($fileList | Where-Object { -not $_.Sha256 }).Count -and -not @($coverageIssues | Where-Object Reason -eq 'directory could not be enumerated').Count
-$treeHash = -join ([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($manifest)) | ForEach-Object { $_.ToString('x2') })
+$treeHash = Get-BytesSha256 ([Text.Encoding]::UTF8.GetBytes($manifest))
 
 if (-not $treeHashComplete) { $treeHash = $null }
 

@@ -1,6 +1,6 @@
 {
   "name": "instinct",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "license": "MIT",
-  "description": "A collection of custom agent skills."
+  "description": "Security audits of agent skills and plugins before installation or use."
 }

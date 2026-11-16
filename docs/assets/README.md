@@ -4,7 +4,9 @@ Original AI-generated illustrations inspired by Lewis Carroll's *Alice's Adventu
 Both the [English README](../../README.md) and [Ukrainian README](../../README.uk.md) use the same
 image files, with localized alt text and captions.
 
-Generated on 2026-11-16 with the built-in `image_gen` tool. The PNG files are the generated originals.
+Generated on 2026-11-16 with the built-in `image_gen` tool, then edited to add the owner-supplied
+“БЕЗ ДУШІ / WITHOUT SOUL” logo in the lower-right corner. The logo's exterior white background was
+removed; its white ghost, black lettering and red brushstroke were retained.
 
 | Asset | Placement | Scene |
 |---|---|---|
@@ -13,7 +15,8 @@ Generated on 2026-11-16 with the built-in `image_gen` tool. The PNG files are th
 
 ## Generation prompts
 
-These are the exact prompts used for the two images. A new generation may produce different artwork.
+These are the exact prompts used for the two base illustrations, before the logo edits described
+above. A new generation may produce different artwork.
 
 ### Rabbit-hole cover
 

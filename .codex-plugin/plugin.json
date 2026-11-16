@@ -1,0 +1,7 @@
+{
+  "name": "instinct",
+  "version": "0.13.0",
+  "license": "MIT",
+  "description": "Security audits of agent skills and plugins before installation or use.",
+  "skills": "./skills"
+}

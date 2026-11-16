@@ -2,14 +2,30 @@
 
 User-visible package changes are listed below, newest first. Historical version entries describe
 development milestones; they do not imply that a Git tag or hosted release exists for each version.
-The current package version is recorded in [.claude-plugin/plugin.json](.claude-plugin/plugin.json).
+The current package version is recorded in [plugin.json](plugin.json) and synchronized with the host overlays.
 
-## Unreleased
+## 0.13.0
+
+### Portable packaging and installation
+
+- Add an Agent Plugins 1.0 root manifest and a Codex compatibility manifest alongside the Claude Code
+  plugin. All share the same identity and version; validation checks their consistency.
+- Add a Python 3.10+ installer that copies complete skills into Codex or Claude project/user discovery
+  directories, or a custom directory for another agent. It uses the standard library, preserves file
+  bytes, needs no symlinks or shell-specific copy commands, and requires `--update` before replacement.
+- Resolve skill resources relative to the loaded `SKILL.md`, describe work by available capabilities,
+  and report manual-review limits when shell, runtime, image viewing or hashing is unavailable.
+- Make `AGENTS.md` the shared repository instructions and retain `CLAUDE.md` as the Claude entry point.
+- Remove newer .NET hashing API dependencies so the scanner matches its PowerShell 7.0+ requirement.
+- Add CI for Windows, Linux and macOS, including installer checks, scanner regressions and comparison
+  of scanner output across operating systems. A configured CI matrix is not a completed host test.
 
 ### Documentation
 
 - Add two AI-generated Alice in Wonderland illustrations to the English and Ukrainian READMEs,
   with localized alt text and saved [artwork notes and generation prompts](docs/assets/README.md).
+- Brand both README illustrations with the owner-supplied “БЕЗ ДУШІ / WITHOUT SOUL” logo without its
+  exterior white background.
 
 ## 0.12.0
 

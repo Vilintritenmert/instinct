@@ -1,0 +1,81 @@
+name: Agent and OS portability
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+      - name: Record runtime versions
+        run: |
+          $PSVersionTable | Format-List
+          python --version
+          git --version
+      - name: Validate skills and plugin manifests
+        run: pwsh -NoProfile -File ./scripts/validate.ps1
+      - name: Check portable installation and scanner output
+        env:
+          INSTINCT_PORTABILITY_REPORT: .ci-results/portability.json
+        run: python -B ./tests/test_portability.py -v
+      - name: Run scanner regressions
+        run: pwsh -NoProfile -File ./tests/how-deep-the-rabbit-hole-goes/run.ps1 -SecurityReportPath .ci-results/security.json
+      - name: Check evaluation and frozen-data integrity
+        run: python -B ./tests/how-deep-the-rabbit-hole-goes/test_evaluate.py -v
+      - name: Check context-review integrity
+        run: python -B ./tests/how-deep-the-rabbit-hole-goes/test_review_context.py -v
+      - name: Check corpus integrity
+        run: python -B ./tests/how-deep-the-rabbit-hole-goes/corpus/test_validate.py -v
+      - name: Check POSIX shell syntax
+        if: runner.os != 'Windows'
+        shell: sh
+        run: sh -n ./skills/how-deep-the-rabbit-hole-goes/scripts/scan.sh
+      - name: Retain portability and security evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portability-${{ runner.os }}
+          path: .ci-results/*.json
+          if-no-files-found: warn
+
+  compare:
+    name: Compare scanner results across operating systems
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: portability-*
+          path: reports
+      - name: Require identical scanner output
+        shell: python
+        run: |
+          from pathlib import Path
+          import json
+
+          paths = sorted(Path('reports').glob('portability-*/portability.json'))
+          assert len(paths) == 3, f'Expected three OS reports, found {paths}'
+          results = [json.loads(path.read_text(encoding='utf-8')) for path in paths]
+          for path, result in zip(paths[1:], results[1:]):
+              assert result == results[0], f'Scanner output differs: {paths[0]} and {path}'
+          print('Windows, Linux and macOS scanner results match (excluding the absolute target path).')
