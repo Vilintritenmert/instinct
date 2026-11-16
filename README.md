@@ -12,7 +12,7 @@ plugin manifests provide host-specific packaging.
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-0.13.0-blue?style=for-the-badge)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.13.1-blue?style=for-the-badge)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 [![Agents: any SKILL.md agent](https://img.shields.io/badge/agents-any%20SKILL.md%20agent-D97757?style=for-the-badge)](#other-agents)
 [![PowerShell 7+](https://img.shields.io/badge/PowerShell-7%2B-5391FE?style=for-the-badge&logo=powershell&logoColor=white)](https://learn.microsoft.com/powershell/scripting/install/installing-powershell)

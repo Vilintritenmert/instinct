@@ -4,6 +4,17 @@ User-visible package changes are listed below, newest first. Historical version 
 development milestones; they do not imply that a Git tag or hosted release exists for each version.
 The current package version is recorded in [plugin.json](plugin.json) and synchronized with the host overlays.
 
+## 0.13.1
+
+### Scanner output
+
+- Write the text report as UTF-8 when `pwsh -File` output is redirected, as `-Json` and `-ListRules`
+  output already was. Git Bash on Windows no longer shows the report's separators and non-English
+  evidence as `�`, and legacy console code pages no longer replace non-ASCII paths. On a console the
+  report keeps its severity colors. A regression reads the raw text report under code page 437 (a
+  Latin-1 locale on macOS and Linux).
+- Document that the `scan.sh` wrapper works in Git Bash on Windows.
+
 ## 0.13.0
 
 ### Portable packaging and installation
@@ -17,11 +28,9 @@ The current package version is recorded in [plugin.json](plugin.json) and synchr
   and report manual-review limits when shell, runtime, image viewing or hashing is unavailable.
 - Make `AGENTS.md` the shared repository instructions and retain `CLAUDE.md` as the Claude entry point.
 - Remove newer .NET hashing API dependencies so the scanner matches its PowerShell 7.0+ requirement.
-- Write the text report, `-Json` and `-ListRules` output as UTF-8 when `pwsh -File` output is
-  redirected. Windows consoles with a legacy code page (866, 437 …) no longer turn non-ASCII paths
-  and evidence into look-alike or `?` characters, and Git Bash no longer shows the text report's
-  separators and non-English evidence as `�`. The test runners decode child output as UTF-8, and a
-  regression reads the raw text report under code page 437 (a Latin-1 locale on macOS and Linux).
+- Write `-Json` and `-ListRules` output as UTF-8 when `pwsh -File` output is redirected. Windows
+  consoles with a legacy code page (866, 437 …) no longer turn non-ASCII paths and evidence into
+  look-alike or `?` characters. The test runners decode child output as UTF-8.
 - Add CI for Windows, Linux and macOS, including installer checks, scanner regressions and comparison
   of scanner output across operating systems. A configured CI matrix is not a completed host test.
 
