@@ -36,7 +36,8 @@ pwsh -NoProfile -File ./skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1 -L
 ### macOS, Linux and other Unix-like systems
 
 `scripts/scan.sh` is a POSIX `sh` wrapper around `scan.ps1`. It needs no execute bit and has been tested
-with dash and bash. It returns exactly the scanner's output and exit code:
+with dash and bash, including Git Bash on Windows, where Unix-style paths such as `/c/projects/skill`
+reach the scanner as Windows paths. It returns exactly the scanner's output and exit code:
 
 ```bash
 sh ./skills/how-deep-the-rabbit-hole-goes/scripts/scan.sh ./tests/how-deep-the-rabbit-hole-goes/clean-skill
@@ -85,8 +86,9 @@ These codes describe completed scans. Treat a process failure or missing/invalid
 not a safety result. Capture the exit code immediately after running the scanner: `$LASTEXITCODE` in
 PowerShell, `$?` in sh/bash/zsh, `%ERRORLEVEL%` in cmd.
 
-When `pwsh -File` writes `-Json` or `-ListRules` output to a pipe or file, the scanner emits UTF-8
-without a BOM on every OS, regardless of the console code page, so non-ASCII file names survive intact.
+When `pwsh -File` writes the text report, `-Json` or `-ListRules` output to a pipe or file, the scanner
+emits UTF-8 without a BOM on every OS, regardless of the console code page, so non-ASCII file names and
+evidence survive intact and UTF-8 readers such as Git Bash display them correctly.
 Decode captured output as UTF-8. A PowerShell caller decodes child output with
 `[Console]::OutputEncoding`, so set it to UTF-8 before capturing:
 
@@ -95,7 +97,8 @@ Decode captured output as UTF-8. A PowerShell caller decodes child output with
 $report = pwsh -NoProfile -File ./skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1 -Path <target> -Json | ConvertFrom-Json
 ```
 
-Called in-process (`& scan.ps1 -Json`), the scanner returns the JSON as a string, with no encoding step.
+Called in-process (`& scan.ps1`), the scanner returns `-Json` output as a string and writes the text
+report to the host, with no encoding step. On a console, the text report keeps its severity colors.
 
 ## Coverage and version identity
 

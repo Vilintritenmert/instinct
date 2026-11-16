@@ -280,8 +280,9 @@ cd instinct
 pwsh -NoProfile -File ./skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1 -Path ./tests/how-deep-the-rabbit-hole-goes/clean-skill
 ```
 
-On macOS, Linux and other Unix-like systems you can use the POSIX `sh` wrapper instead. It finds `pwsh`
-even when it is not on `PATH`, takes Unix-style options and gives the same output and exit code:
+On macOS, Linux, other Unix-like systems and Git Bash on Windows you can use the POSIX `sh` wrapper
+instead. It finds `pwsh` even when it is not on `PATH`, takes Unix-style options and gives the same
+output and exit code:
 
 ```bash
 sh ./skills/how-deep-the-rabbit-hole-goes/scripts/scan.sh ./tests/how-deep-the-rabbit-hole-goes/clean-skill
@@ -295,6 +296,9 @@ Summary: CRITICAL 0 · HIGH 0 · MEDIUM 0 · LOW 0
 Scan complete: True · coverage gaps: 0
 These are signals for manual review, not a verdict.
 ```
+
+Redirected to a file or pipe, the report is written as UTF-8 on every OS, so Git Bash and other UTF-8
+terminals show non-ASCII file names and evidence correctly.
 
 | Option (`scan.ps1`) | `scan.sh` | Effect |
 |---|---|---|

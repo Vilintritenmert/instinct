@@ -330,6 +330,25 @@ try {
         try { (($raw -join "`n") | ConvertFrom-Json -ErrorAction Stop).TreeHash } catch { $null }
     })
     Check 'tree-hash-ignores-locale' ($hashes.Count -eq 3 -and $hashes[0] -match '^[a-f0-9]{64}$' -and @($hashes | Sort-Object -Unique).Count -eq 1)
+    # The text report must reach a redirected stdout as UTF-8 even under a legacy console code page
+    # (437 on Windows, a Latin-1 locale elsewhere), as Git Bash and other UTF-8 readers expect.
+    # Read the raw bytes so that no caller-side decoding can hide the encoding.
+    $psi = [Diagnostics.ProcessStartInfo]::new('pwsh')
+    foreach ($arg in '-NoProfile','-File',$Scanner,'-Path',$locale,'-Inventory') { $psi.ArgumentList.Add($arg) }
+    $psi.RedirectStandardOutput = $true; $psi.UseShellExecute = $false
+    if (-not $IsWindows) { $psi.Environment['LC_ALL'] = 'en_US.ISO-8859-1' }
+    $consoleEncoding = [Console]::OutputEncoding
+    try {
+        if ($IsWindows) { [Console]::OutputEncoding = [Text.Encoding]::GetEncoding(437) }
+        $child = [Diagnostics.Process]::Start($psi)
+        $buffer = [IO.MemoryStream]::new()
+        $child.StandardOutput.BaseStream.CopyTo($buffer)
+        $child.WaitForExit()
+    } finally { [Console]::OutputEncoding = $consoleEncoding }
+    $reportBytes = $buffer.ToArray()
+    $reportText = try { [Text.UTF8Encoding]::new($false, $true).GetString($reportBytes).Normalize() } catch { $null }
+    $hasBom = $reportBytes.Length -ge 3 -and $reportBytes[0] -eq 0xEF -and $reportBytes[1] -eq 0xBB -and $reportBytes[2] -eq 0xBF
+    Check 'text-report-is-utf8-when-redirected' ($child.ExitCode -eq 0 -and $null -ne $reportText -and -not $hasBom -and $reportText.Contains("Summary: CRITICAL 0 $([char]0xB7) HIGH 0") -and $reportText.Contains('Ölfile.md'))
     $shebang = Join-Path $scratch 'shebang'
     [void](New-Item -ItemType Directory -Path $shebang)
     [IO.File]::WriteAllText((Join-Path $shebang 'SKILL.md'),'Run tool to format the notes.')
