@@ -85,6 +85,18 @@ These codes describe completed scans. Treat a process failure or missing/invalid
 not a safety result. Capture the exit code immediately after running the scanner: `$LASTEXITCODE` in
 PowerShell, `$?` in sh/bash/zsh, `%ERRORLEVEL%` in cmd.
 
+When `pwsh -File` writes `-Json` or `-ListRules` output to a pipe or file, the scanner emits UTF-8
+without a BOM on every OS, regardless of the console code page, so non-ASCII file names survive intact.
+Decode captured output as UTF-8. A PowerShell caller decodes child output with
+`[Console]::OutputEncoding`, so set it to UTF-8 before capturing:
+
+```powershell
+[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
+$report = pwsh -NoProfile -File ./skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1 -Path <target> -Json | ConvertFrom-Json
+```
+
+Called in-process (`& scan.ps1 -Json`), the scanner returns the JSON as a string, with no encoding step.
+
 ## Coverage and version identity
 
 Always inspect these JSON fields before interpreting a scan:

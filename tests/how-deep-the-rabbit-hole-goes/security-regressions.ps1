@@ -10,7 +10,10 @@ param(
     [switch]$MeasureOnly
 )
 $ErrorActionPreference = 'Stop'
-$scratch = Join-Path $PSScriptRoot ('.synthetic-' + [guid]::NewGuid().ToString('N'))
+# scan.ps1 writes -Json and -ListRules output to a redirected stdout as UTF-8; decode it the same way.
+$savedOutputEncoding = [Console]::OutputEncoding
+[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
+$scratch =Join-Path $PSScriptRoot ('.synthetic-' + [guid]::NewGuid().ToString('N'))
 [void](New-Item -ItemType Directory -Path $scratch)
 $cases = [System.Collections.Generic.List[object]]::new()
 $results = [System.Collections.Generic.List[object]]::new()
@@ -416,6 +419,7 @@ $summary = [pscustomobject]@{
     Results=@($results)
 }
 if ($ReportPath) { $summary | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath $ReportPath -Encoding utf8 }
+[Console]::OutputEncoding = $savedOutputEncoding
 Write-Host ("Targeted probes: TP {0}/{1}, FN {2}, FP {3}/{4}; robustness {5}/{6}" -f $summary.TP,$summary.PositiveCases,$summary.FN,$summary.FP,$summary.NegativeCases,$summary.RobustnessPassed,$summary.RobustnessTotal)
 if (-not $MeasureOnly -and @($results | Where-Object { -not $_.Passed }).Count) { exit 1 }
 exit 0

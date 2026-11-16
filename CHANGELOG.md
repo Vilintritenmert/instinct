@@ -17,6 +17,9 @@ The current package version is recorded in [plugin.json](plugin.json) and synchr
   and report manual-review limits when shell, runtime, image viewing or hashing is unavailable.
 - Make `AGENTS.md` the shared repository instructions and retain `CLAUDE.md` as the Claude entry point.
 - Remove newer .NET hashing API dependencies so the scanner matches its PowerShell 7.0+ requirement.
+- Write `-Json` and `-ListRules` output as UTF-8 when `pwsh -File` output is redirected. Windows
+  consoles with a legacy code page (866, 437 …) no longer turn non-ASCII paths and evidence into
+  look-alike or `?` characters. The test runners decode child output as UTF-8.
 - Add CI for Windows, Linux and macOS, including installer checks, scanner regressions and comparison
   of scanner output across operating systems. A configured CI matrix is not a completed host test.
 

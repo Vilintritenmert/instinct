@@ -40,6 +40,19 @@ function Get-BytesSha256([byte[]]$bytes) {
     try { [BitConverter]::ToString($hash.ComputeHash($bytes)).Replace('-', '').ToLowerInvariant() }
     finally { $hash.Dispose() }
 }
+# JSON reports carry file paths, which may hold any Unicode character. When this script is run
+# with `pwsh -File` and stdout is a pipe or file, PowerShell would encode them with the console
+# code page (e.g. 866 or 437 on Windows), silently replacing characters it lacks ('Ö' -> 'O').
+# Write UTF-8 bytes (no BOM) instead. Do not change [Console]::OutputEncoding: that resets the
+# code page of the console shared with the caller. Only -File leaves $MyInvocation.Line empty;
+# `& scan.ps1` from -Command or another script keeps returning a string to the caller.
+$script:topLevel = $MyInvocation.CommandOrigin -eq 'Runspace' -and -not $MyInvocation.Line
+function Write-JsonOutput([string]$text) {
+    if (-not ($script:topLevel -and [Console]::IsOutputRedirected)) { return $text }
+    $bytes = [Text.UTF8Encoding]::new($false).GetBytes($text + [Environment]::NewLine)
+    $stdout = [Console]::OpenStandardOutput()
+    try { $stdout.Write($bytes, 0, $bytes.Length); $stdout.Flush() } finally { $stdout.Dispose() }
+}
 if (-not $ListRules) {
     $target = (Resolve-Path -LiteralPath $Path).Path
     $isFile = Test-Path -LiteralPath $target -PathType Leaf
@@ -323,7 +336,7 @@ foreach ($entry in $catalogRules) {
 $catalogJson = ConvertTo-Json -InputObject @($catalogRules) -Depth 6 -Compress
 $catalogSha256 = Get-BytesSha256 ([Text.Encoding]::UTF8.GetBytes($catalogJson))
 if ($ListRules) {
-    [pscustomobject]@{ RuleCatalogVersion=1; RuleCatalogSha256=$catalogSha256; Rules=@($catalogRules) } | ConvertTo-Json -Depth 6
+    Write-JsonOutput ([pscustomobject]@{ RuleCatalogVersion=1; RuleCatalogSha256=$catalogSha256; Rules=@($catalogRules) } | ConvertTo-Json -Depth 6)
     exit 0
 }
 
@@ -1197,12 +1210,12 @@ $skillNames = [System.Collections.Generic.List[string]]::new([string[]]@($fmName
 $skillNames.Sort([StringComparer]::Ordinal)
 
 if ($Json) {
-    [pscustomobject]@{
+    Write-JsonOutput ([pscustomobject]@{
         SchemaVersion = 2; TreeHashVersion = 3; RuleCatalogVersion = 1; RuleCatalogSha256 = $catalogSha256
         Target = $target; TreeHash = $treeHash; Stats = $stats; Counts = $counts; Threats = $threats
         ScanComplete = ($coverageIssues.Count -eq 0); CoverageIssues = @($coverageIssues); TreeHashComplete = $treeHashComplete; Components = @($components)
         Skills = @($skillNames); Domains = @($domains); Findings = @($sorted); Inventory = @($byPath)
-    } | ConvertTo-Json -Depth 8
+    } | ConvertTo-Json -Depth 8)
 } else {
     $colors = @{ CRITICAL = 'Red'; HIGH = 'Magenta'; MEDIUM = 'Yellow'; LOW = 'Gray' }
     Write-Host ("how-deep-the-rabbit-hole-goes scan: {0}" -f (Show-Invisible $target))
