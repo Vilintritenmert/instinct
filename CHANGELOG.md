@@ -8,6 +8,9 @@ The current package version is recorded in [.claude-plugin/plugin.json](.claude-
 
 ### Documentation
 
+- Add two AI-generated Alice in Wonderland illustrations to the English and Ukrainian READMEs,
+  with localized alt text and saved [artwork notes and generation prompts](docs/assets/README.md).
+
 - Reorganize English and Ukrainian READMEs around installation, first use, audit results and limits.
 - Replace the marketplace owner placeholder with `Vilintritenmert/instinct`; document plugin updates
   and uninstallation separately from marketplace refreshes.

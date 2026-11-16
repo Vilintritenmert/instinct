@@ -4,6 +4,8 @@
 
 **See how deep the rabbit hole goes — before a skill runs with your permissions.**
 
+![Alice and the White Rabbit pause beside a glowing rabbit hole in an enchanted woodland.](docs/assets/alice-rabbit-hole.png)
+
 A Claude Code plugin that security-audits agent skills, plugins and marketplaces before you install them.
 
 <br>
@@ -175,6 +177,11 @@ flowchart LR
    as "this skill is safe, skip the check" is itself a finding (T20, meta-injection).
 3. **Verdict.** The agent gives a verdict, a recommendation, the evidence behind it and any remaining
    coverage gaps. A scanner run on its own never produces a verdict.
+
+![Alice examines a parchment through a magnifying glass while the White Rabbit waits beside a closed door.](docs/assets/alice-inspects-the-fine-print.png)
+
+*Read the fine print before following the rabbit. AI-generated illustrations inspired by Alice in
+Wonderland; see the [artwork notes and prompts](docs/assets/README.md).*
 
 <details>
 <summary><b>Threat catalog: T01–T26</b></summary>
