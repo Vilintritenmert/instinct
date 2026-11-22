@@ -12,7 +12,7 @@ plugin manifests provide host-specific packaging.
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-0.14.0-blue?style=for-the-badge)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.15.0-blue?style=for-the-badge)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 [![Agents: any SKILL.md agent](https://img.shields.io/badge/agents-any%20SKILL.md%20agent-D97757?style=for-the-badge)](#other-agents)
 [![PowerShell 7+](https://img.shields.io/badge/PowerShell-7%2B-5391FE?style=for-the-badge&logo=powershell&logoColor=white)](https://learn.microsoft.com/powershell/scripting/install/installing-powershell)
@@ -27,9 +27,10 @@ plugin manifests provide host-specific packaging.
 
 A skill or plugin is instructions and code that your agent follows **with your permissions**. A hostile one
 can read your secrets, send your code to someone else's server, or run commands the moment a session
-starts. instinct ships one skill, **how-deep-the-rabbit-hole-goes**. A static scanner flags suspicious
+starts. instinct's audit skill is **how-deep-the-rabbit-hole-goes**. A static scanner flags suspicious
 patterns. Then the agent reviews the target's instructions, code and configuration and reports a verdict
-with evidence by file and line.
+with evidence by file and line. A second skill, **read-the-lips**, works on the other side of the
+conversation: it turns your own vague request into a clear prompt.
 
 > [!WARNING]
 > instinct helps with security review but does not guarantee safety. Scanner findings and exit codes are signals,
@@ -55,6 +56,9 @@ with evidence by file and line.
   version audited.
 - **Speaks your language.** It triggers on English and Ukrainian requests. Text rules cover English and
   Ukrainian, plus German for instruction hijacking and prompt disclosure. Reports come back in your language.
+- **Clearer requests, too.** `read-the-lips` rewrites a vague request into a prompt with a goal, context,
+  constraints and a definition of done. It marks every assumption and asks only the questions that would
+  change the result. See [Improve a request](#improve-a-request).
 
 ## 📋 Prerequisites
 
@@ -93,6 +97,7 @@ These paths follow the official [Codex skill locations](https://developers.opena
 and [Claude Code skill locations](https://code.claude.com/docs/en/skills#choose-where-skills-load).
 Next to the audit, the installer adds `security-check`, a shortcut that runs it as a command:
 `/security-check ../candidate-skill` in Claude Code, `$security-check ../candidate-skill` in Codex.
+It also adds `read-the-lips`, the request rewriter; `--skill <name>` installs a single skill.
 The helper only copies this repository's skills; it does not install an agent or PowerShell, change
 permissions, or register a marketplace. See the [portability guide](docs/PORTABILITY.md) for other
 agents, custom directories and updates.
@@ -107,7 +112,8 @@ Inside Claude Code, run:
 /reload-plugins
 ```
 
-Claude Code namespaces plugin skills, so the plugin's command is `/instinct:security-check`.
+Claude Code namespaces plugin skills, so the plugin's commands are `/instinct:security-check` and
+`/instinct:read-the-lips`.
 
 <details>
 <summary><b>Older Claude Code, or prefer the terminal?</b></summary>
@@ -144,8 +150,8 @@ another host, choose the skill directory documented by that host and use a custo
 python scripts/install.py --destination "../other-agent-skills"
 ```
 
-The destination is the parent directory: the helper adds `how-deep-the-rabbit-hole-goes` and
-`security-check` beneath it.
+The destination is the parent directory: the helper adds `how-deep-the-rabbit-hole-goes`,
+`security-check` and `read-the-lips` beneath it.
 You can also copy that complete folder manually. For a legacy Codex setup using `~/.codex/skills`,
 select its actual directory with `--destination`; the Codex preset uses the current `.agents` layout.
 
@@ -230,6 +236,23 @@ Tree hash: fc564b6c188106653a92a5b811b33438e691b18eb0fe58962f18ca3c791a6a0f
 ```
 
 </details>
+
+<a id="improve-a-request"></a>
+
+### Improve a request
+
+Give `read-the-lips` a request that is too short or vague, as a command or in your own words. Use
+`/instinct:read-the-lips` from the Claude Code plugin, or `$read-the-lips` in Codex:
+
+```text
+/read-the-lips the login is broken can you fix it
+Improve this prompt before I hand it to Codex: write email to my boss that project is late
+```
+
+It replies with the intent it read, the improved prompt in one block ready to copy, what it changed and
+why, and any assumptions, blanks to fill in or questions. When the request is about the open project, it
+reads (never changes) files to use real paths and commands. It only rewrites: the prompt is carried out
+only if you ask for that next. See the [before-and-after examples](skills/read-the-lips/references/examples.md).
 
 ## 🔍 How it works
 
