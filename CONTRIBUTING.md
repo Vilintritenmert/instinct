@@ -36,6 +36,18 @@ instinct/
 └── scripts/               portable installer, skill scaffolding and validation
 ```
 
+## Trying a local copy
+
+Install your working copy with the same `scripts/install.py` command as in the
+[README](README.md#copy-the-skills-into-a-project), adding `--update` to replace an earlier copy. For the
+Claude Code plugin, add this checkout as the marketplace instead of the GitHub repository, from the
+repository root:
+
+```text
+claude plugin marketplace add .
+claude plugin install instinct@instinct
+```
+
 ## Adding or editing a skill
 
 Create new skills with the helper, then fill in their actual instructions:
