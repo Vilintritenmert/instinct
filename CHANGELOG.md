@@ -4,6 +4,19 @@ User-visible package changes are listed below, newest first. Historical version 
 development milestones; they do not imply that a Git tag or hosted release exists for each version.
 The current package version is recorded in [plugin.json](plugin.json) and synchronized with the host overlays.
 
+## 0.15.0
+
+### Request rewriter
+
+- Add `read-the-lips`, a skill that rewrites a vague request into a clear prompt: it states the intent it
+  read, returns the improved prompt ready to copy, lists what changed, and marks assumptions,
+  placeholders and the few questions that would change the result. It rewrites only and carries the
+  prompt out only if asked next. It reads files only to ground names in the open project and runs no
+  commands. Invoke it as `/read-the-lips <request>` in Claude Code after a copy install,
+  `/instinct:read-the-lips` from the plugin, `$read-the-lips` in Codex, or in plain words.
+- `install.py` installs it by default with the other skills; `--skill read-the-lips` installs it alone.
+- The package description now mentions the rewriter.
+
 ## 0.14.0
 
 ### Command shortcut

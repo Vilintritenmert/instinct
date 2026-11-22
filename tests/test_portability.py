@@ -20,6 +20,8 @@ SKILL_NAME = 'how-deep-the-rabbit-hole-goes'
 SKILL = ROOT / 'skills' / SKILL_NAME
 SHORTCUT_NAME = 'security-check'
 SHORTCUT = ROOT / 'skills' / SHORTCUT_NAME
+REWRITER_NAME = 'read-the-lips'
+REWRITER = ROOT / 'skills' / REWRITER_NAME
 
 
 def files_below(folder: Path) -> dict[str, bytes]:
@@ -52,7 +54,7 @@ class InstallationTests(unittest.TestCase):
     def test_list_needs_no_destination_and_works_outside_checkout(self):
         result = self.install('--list')
         self.require_success(result)
-        self.assertEqual(result.stdout.split(), [SKILL_NAME, SHORTCUT_NAME])
+        self.assertEqual(result.stdout.split(), [SKILL_NAME, REWRITER_NAME, SHORTCUT_NAME])
         self.assertEqual(list(self.cwd.iterdir()), [])
 
     def test_custom_destination_copies_complete_skill_with_exact_bytes(self):
@@ -60,7 +62,9 @@ class InstallationTests(unittest.TestCase):
         self.require_success(result)
         self.assertEqual(files_below(self.destination / SKILL_NAME), files_below(SKILL))
         self.assertEqual(files_below(self.destination / SHORTCUT_NAME), files_below(SHORTCUT))
-        self.assertEqual(sorted(p.name for p in self.destination.iterdir()), [SKILL_NAME, SHORTCUT_NAME])
+        self.assertEqual(files_below(self.destination / REWRITER_NAME), files_below(REWRITER))
+        self.assertEqual(sorted(p.name for p in self.destination.iterdir()),
+                         [SKILL_NAME, REWRITER_NAME, SHORTCUT_NAME])
 
     def test_unicode_destination_succeeds_with_legacy_redirected_output(self):
         environment = dict(os.environ, PYTHONIOENCODING='ascii:strict')
@@ -142,6 +146,14 @@ class InstallationTests(unittest.TestCase):
         self.assertEqual(files_below(self.destination / SHORTCUT_NAME), files_below(SHORTCUT))
         self.assertEqual(files_below(self.destination / SKILL_NAME), files_below(SKILL))
         self.assertIn('../how-deep-the-rabbit-hole-goes/SKILL.md', (SHORTCUT / 'SKILL.md').read_text(encoding='utf-8'))
+
+    def test_rewriter_installs_alone_with_its_references(self):
+        # read-the-lips loads no sibling skill, so selecting it copies only its own folder.
+        self.require_success(self.install('--destination', self.destination, '--skill', REWRITER_NAME))
+        self.assertEqual([p.name for p in self.destination.iterdir()], [REWRITER_NAME])
+        installed = files_below(self.destination / REWRITER_NAME)
+        self.assertEqual(installed, files_below(REWRITER))
+        self.assertIn('references/examples.md', installed)
 
     def test_agent_and_destination_are_mutually_exclusive(self):
         result = self.install('--destination', self.destination, '--agent', 'codex')
