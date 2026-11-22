@@ -18,6 +18,8 @@ ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / 'scripts' / 'install.py'
 SKILL_NAME = 'how-deep-the-rabbit-hole-goes'
 SKILL = ROOT / 'skills' / SKILL_NAME
+SHORTCUT_NAME = 'security-check'
+SHORTCUT = ROOT / 'skills' / SHORTCUT_NAME
 
 
 def files_below(folder: Path) -> dict[str, bytes]:
@@ -50,14 +52,15 @@ class InstallationTests(unittest.TestCase):
     def test_list_needs_no_destination_and_works_outside_checkout(self):
         result = self.install('--list')
         self.require_success(result)
-        self.assertIn(SKILL_NAME, result.stdout)
+        self.assertEqual(result.stdout.split(), [SKILL_NAME, SHORTCUT_NAME])
         self.assertEqual(list(self.cwd.iterdir()), [])
 
     def test_custom_destination_copies_complete_skill_with_exact_bytes(self):
         result = self.install('--destination', self.destination)
         self.require_success(result)
         self.assertEqual(files_below(self.destination / SKILL_NAME), files_below(SKILL))
-        self.assertEqual([p.name for p in self.destination.iterdir()], [SKILL_NAME])
+        self.assertEqual(files_below(self.destination / SHORTCUT_NAME), files_below(SHORTCUT))
+        self.assertEqual(sorted(p.name for p in self.destination.iterdir()), [SKILL_NAME, SHORTCUT_NAME])
 
     def test_unicode_destination_succeeds_with_legacy_redirected_output(self):
         environment = dict(os.environ, PYTHONIOENCODING='ascii:strict')
@@ -72,6 +75,8 @@ class InstallationTests(unittest.TestCase):
                 result = self.install('--agent', agent, '--project-root', project)
                 self.require_success(result)
                 self.assertEqual(files_below(project / parent / 'skills' / SKILL_NAME), files_below(SKILL))
+                # The skill folder name is the command: .claude/skills/security-check gives /security-check.
+                self.assertEqual(files_below(project / parent / 'skills' / SHORTCUT_NAME), files_below(SHORTCUT))
         self.assertEqual(list(self.cwd.iterdir()), [])
 
     def test_default_project_is_current_working_directory(self):
@@ -129,6 +134,14 @@ class InstallationTests(unittest.TestCase):
     def test_explicit_skill_selection(self):
         self.require_success(self.install('--destination', self.destination, '--skill', SKILL_NAME))
         self.assertEqual(files_below(self.destination / SKILL_NAME), files_below(SKILL))
+        self.assertEqual([p.name for p in self.destination.iterdir()], [SKILL_NAME])
+
+    def test_shortcut_installs_the_audit_it_loads(self):
+        # /security-check reads ../how-deep-the-rabbit-hole-goes/SKILL.md, so both must land side by side.
+        self.require_success(self.install('--destination', self.destination, '--skill', SHORTCUT_NAME))
+        self.assertEqual(files_below(self.destination / SHORTCUT_NAME), files_below(SHORTCUT))
+        self.assertEqual(files_below(self.destination / SKILL_NAME), files_below(SKILL))
+        self.assertIn('../how-deep-the-rabbit-hole-goes/SKILL.md', (SHORTCUT / 'SKILL.md').read_text(encoding='utf-8'))
 
     def test_agent_and_destination_are_mutually_exclusive(self):
         result = self.install('--destination', self.destination, '--agent', 'codex')
