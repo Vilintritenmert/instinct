@@ -21,6 +21,8 @@ import time
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS = ROOT / "skills"
 AGENT_DIRS = {"codex": ".agents", "claude": ".claude"}
+# Skills that load another packaged skill from a sibling folder; --skill installs those too.
+REQUIRES = {"security-check": ("how-deep-the-rabbit-hole-goes",)}
 
 
 def is_link(path: Path) -> bool:
@@ -69,7 +71,7 @@ def parser() -> argparse.ArgumentParser:
     )
     cli.add_argument("--scope", choices=("project", "user"), help="agent preset scope (default: project)")
     cli.add_argument("--project-root", type=Path, help="project directory (default: current directory)")
-    cli.add_argument("--skill", help="install one packaged skill (default: all)")
+    cli.add_argument("--skill", help="install one packaged skill and the skills it needs (default: all)")
     cli.add_argument("--list", action="store_true", help="list packaged skills and exit")
     cli.add_argument("--update", action="store_true", help="replace an existing same-named skill folder")
     cli.add_argument("--dry-run", action="store_true", help="show the validated plan without writing files")
@@ -164,7 +166,8 @@ def main(argv: list[str] | None = None) -> int:
         if args.skill:
             if args.skill not in skills:
                 cli.error(f"unknown skill {args.skill!r}; use --list")
-            skills = {args.skill: skills[args.skill]}
+            selected = (*REQUIRES.get(args.skill, ()), args.skill)
+            skills = {name: skills[name] for name in selected}
         if args.list:
             for name in skills:
                 print(name)

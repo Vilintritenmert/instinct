@@ -17,6 +17,8 @@ the agent loading them.
 - Keep commands portable across Windows, Linux and macOS. Quote paths, avoid symlink requirements,
   and provide shell-specific variants only when necessary. Detect a missing capability and report
   the limitation rather than assuming a shell, runtime or image viewer is available.
+- `security-check` is a command shortcut that reads `../how-deep-the-rabbit-hole-goes/SKILL.md`. If
+  either skill is renamed, update that path, `REQUIRES` in `scripts/install.py` and the installer tests.
 - Run any third-party or borrowed skill through `how-deep-the-rabbit-hole-goes` before adding it.
 - After changing `skills/how-deep-the-rabbit-hole-goes/scripts/scan.ps1`, run
   `pwsh -NoProfile -File ./tests/how-deep-the-rabbit-hole-goes/run.ps1`.

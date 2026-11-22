@@ -12,7 +12,7 @@ plugin manifests provide host-specific packaging.
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-0.13.1-blue?style=for-the-badge)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.14.0-blue?style=for-the-badge)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
 [![Agents: any SKILL.md agent](https://img.shields.io/badge/agents-any%20SKILL.md%20agent-D97757?style=for-the-badge)](#other-agents)
 [![PowerShell 7+](https://img.shields.io/badge/PowerShell-7%2B-5391FE?style=for-the-badge&logo=powershell&logoColor=white)](https://learn.microsoft.com/powershell/scripting/install/installing-powershell)
@@ -91,7 +91,9 @@ add `--dry-run`. For all your projects, use `--scope user` instead of `--project
 
 These paths follow the official [Codex skill locations](https://developers.openai.com/codex/skills)
 and [Claude Code skill locations](https://code.claude.com/docs/en/skills#choose-where-skills-load).
-The helper only copies this repository's skill; it does not install an agent or PowerShell, change
+Next to the audit, the installer adds `security-check`, a shortcut that runs it as a command:
+`/security-check ../candidate-skill` in Claude Code, `$security-check ../candidate-skill` in Codex.
+The helper only copies this repository's skills; it does not install an agent or PowerShell, change
 permissions, or register a marketplace. See the [portability guide](docs/PORTABILITY.md) for other
 agents, custom directories and updates.
 
@@ -104,6 +106,8 @@ Inside Claude Code, run:
 /plugin install instinct --marketplace Vilintritenmert/instinct
 /reload-plugins
 ```
+
+Claude Code namespaces plugin skills, so the plugin's command is `/instinct:security-check`.
 
 <details>
 <summary><b>Older Claude Code, or prefer the terminal?</b></summary>
@@ -140,7 +144,8 @@ another host, choose the skill directory documented by that host and use a custo
 python scripts/install.py --destination "../other-agent-skills"
 ```
 
-The destination is the parent directory: the helper adds `how-deep-the-rabbit-hole-goes` beneath it.
+The destination is the parent directory: the helper adds `how-deep-the-rabbit-hole-goes` and
+`security-check` beneath it.
 You can also copy that complete folder manually. For a legacy Codex setup using `~/.codex/skills`,
 select its actual directory with `--destination`; the Codex preset uses the current `.agents` layout.
 
@@ -162,6 +167,13 @@ relative to the folder where you started the agent:
 
 ```text
 Security-audit the skill in ../candidate-skill before I install it.
+```
+
+Or run the audit as a command with the target. Use `/instinct:security-check` from the Claude Code
+plugin, or `$security-check` in Codex:
+
+```text
+/security-check ../candidate-skill
 ```
 
 The agent scans the target and reads every text file. It warns you right away about any confirmed critical

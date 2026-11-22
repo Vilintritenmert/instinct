@@ -4,6 +4,18 @@ User-visible package changes are listed below, newest first. Historical version 
 development milestones; they do not imply that a Git tag or hosted release exists for each version.
 The current package version is recorded in [plugin.json](plugin.json) and synchronized with the host overlays.
 
+## 0.14.0
+
+### Command shortcut
+
+- Add `security-check`, a skill that runs the audit as a command with a target:
+  `/security-check ../candidate-skill` in Claude Code after a copy install, `/instinct:security-check`
+  from the Claude Code plugin, `$security-check` in Codex. It loads `how-deep-the-rabbit-hole-goes`
+  from its sibling folder and adds no checks of its own. Claude Code offers it only as a command
+  (`disable-model-invocation`), so plain-language requests still go to the audit skill.
+- `install.py` installs both skills by default, and `--skill security-check` also installs the audit
+  skill it loads.
+
 ## 0.13.1
 
 ### Scanner output
